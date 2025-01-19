@@ -13,7 +13,7 @@ const Login = () => {
   const [loader, setLoader] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    await e.preventDefault();
 
     const data = { email: details.toLowerCase(), password };
     setLoader(true);
