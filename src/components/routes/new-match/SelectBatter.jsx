@@ -1,112 +1,115 @@
-import React, { useRef, useState } from "react";
+import { SetTeam1BowlersList } from "@/store/currentMatch";
+import React, { useState } from "react";
 
 const SelectBatter = ({
-  inning,
-  strike,
-  nonStrike,
-  setW,
-  wicket,
-  setStrike,
-  setNonStrike,
+  TeamScore,
+  dispatch,
+  battingPrefs,
+  SetBattersList,
+  setBowlingPrefs,
+  bowlingPrefs,
+  setBattingPrefs,
   toggle,
   setToggle,
-  dispatch,
-  scoring,
-  score,
 }) => {
+  const { nonStrikeBatter: nonStrike, strikeBatter: strike } = battingPrefs;
+  const { wickets } = bowlingPrefs;
   const [tog, setTog] = useState(false);
-  const strikeRef = useRef();
-  const nonStrikeRef = useRef();
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (nonStrike == "disabled") {
-      alert("Select a player!");
-      return;
-    }
-    dispatch(scoring({ i: nonStrike, type: inning[nonStrike] }));
-    setToggle(true);
-  };
-  const handleStrike = () => {
-    const i = Number(strikeRef.current.value);
-    setStrike(i);
+
+  const handleStrike = (e) => {
+    const player = JSON.parse(e.target.value);
+    setBattingPrefs({ ...battingPrefs, strikeBatter: player });
   };
 
-  const handleNonStrike = () => {
-    const i = Number(nonStrikeRef.current.value);
-    setNonStrike(i);
+  const handleNonStrike = (e) => {
+    const player = JSON.parse(e.target.value);
+    setBattingPrefs({ ...battingPrefs, nonStrikeBatter: player });
   };
 
   const handleTog = (event) => {
     event.preventDefault();
-    if (strike == "disabled") {
-      alert("Select a player!");
-      return;
+    if (strike == null) {
+      return alert("Select a player!");
     }
-    dispatch(scoring({ i: strike, type: inning[strike] }));
-    setW(false);
+    dispatch(SetBattersList({ id: strike.id }));
     setTog(true);
   };
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (nonStrike == null) {
+      alert("Select a player!");
+      return;
+    }
+    dispatch(SetBattersList({ id: nonStrike.id }));
+    setBattingPrefs({ ...battingPrefs, isBatterChange: false });
+    setToggle(true);
+  };
   return (
     <>
       {!toggle && (
         <div className="relative">
           <div className="batter-select absolute left-12 top-16 z-40 h-72 w-80 rounded-md bg-slate-50 p-2 shadow-3xl">
-            <h4 className="text-center">Batter</h4>
-            {!tog ? (
-              <form onSubmit={handleTog}>
-                <select
-                  ref={strikeRef}
-                  onChange={handleStrike}
-                  value={strike}
-                  className="form-select opt"
-                >
-                  <option className="opt" value={"disabled"} disabled>
+            {!tog && (
+              <form>
+                <h5 className="py-2 text-center">Strike Batter</h5>
+                <select onChange={handleStrike} className="form-select opt">
+                  <option className="opt" value={""} selected disabled>
                     Select Striker
                   </option>
-                  {Array.from({ length: inning.length }, (_, index) => (
+                  {TeamScore.playersList.map((player, index) => (
                     <option
                       className="opt"
                       key={index}
-                      value={index}
-                      disabled={index == nonStrike}
+                      disabled={index == nonStrike?.id}
+                      value={JSON.stringify(player)}
                     >
-                      {inning[index].name}
+                      {/* {TeamScore.playersList[index].playerDetails.name} */}
+                      {player.playerDetails.name}
                     </option>
                   ))}
                 </select>
-                <button className="btn btn-danger" type="submit">
-                  Submit
-                </button>
+                {!tog && (
+                  <button
+                    onClick={handleTog}
+                    className="btn btn-danger"
+                    type="button"
+                  >
+                    Submit
+                  </button>
+                )}
               </form>
-            ) : wicket == 0 ? (
-              <form onSubmit={handleSubmit}>
-                <select
-                  ref={nonStrikeRef}
-                  onChange={handleNonStrike}
-                  value={nonStrike}
-                  className="form-select opt"
-                >
-                  <option className="opt" value={"disabled"} disabled>
+            )}
+
+            {tog && wickets == 0 && (
+              <form>
+                <h5 className="py-2 text-center">Non-Strike Batsman</h5>
+                <select onChange={handleNonStrike} className="form-select opt">
+                  <option className="opt" value={""} selected={true} disabled>
                     Select Non Striker
                   </option>
-                  {Array.from({ length: inning.length }, (_, index) => (
+                  {TeamScore.playersList.map((player, index) => (
                     <option
                       className="opt"
                       key={index}
-                      disabled={index == strike}
-                      value={index}
+                      disabled={index == strike?.id}
+                      value={JSON.stringify(player)}
                     >
-                      {inning[index].name}
+                      {/* {TeamScore.playersList[index].playerDetails.name} */}
+                      {player.playerDetails.name}
                     </option>
                   ))}
                 </select>
-                <button type="submit" className="btn btn-danger">
-                  Submit
-                </button>
+                {wickets == 0 && tog && (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className="btn btn-danger"
+                  >
+                    Submit
+                  </button>
+                )}
               </form>
-            ) : (
-              setToggle(true)
             )}
           </div>
         </div>

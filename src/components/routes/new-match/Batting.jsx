@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-
-import checkWinner from "./functions/checkWinner.js";
-import ScoreBoard from "./ScoreBoard.jsx";
+import ScoreBoard from "./Score/ScoreBoard.jsx";
 import SelectBatter from "./SelectBatter";
 import SelectBowler from "./SelectBowler";
 import NewBatter from "./NewBatter";
@@ -11,100 +9,135 @@ import TypeBowler from "./type-ots/TypeBowler";
 import TypeOpeners from "./type-ots/TypeOpeners";
 import TypeNewBatter from "./type-ots/TypeNewBatter";
 import TypeNewBowler from "./type-ots/TypeNewBowler";
+import { useAppDispatch } from "@/store/hooks.js";
 const Batting = ({
-  teamScore,
-  setWinner,
-  batting,
+  team1,
+  team2,
+  SetBattingPlayers,
+  SetBowlingPlayers,
+  BattingTeamScore,
+  BowlingTeamScore,
+  SetTeam1Score,
+  setCapTeam1,
+  SetBattersList,
+  setCapTeam2,
   capTeam1,
   capTeam2,
-  setCapTeam1,
-  setCapTeam2,
-  matchOver,
-  setMatchOver,
-  teamBowling,
-  teamRuns,
-  teamBowlers,
-  match,
-  inning1,
-  inning2,
-  bat1,
-  bat2,
-  setInning1,
-  setInning2,
-  setComplete,
-  team1,
-  dispatch,
-  team2,
+  matchDetails,
+  SetBatterScore,
+  SetBowlerScore,
+  SetBowlersList,
+  setMatchPrefs,
+  matchPrefs,
 }) => {
-  const [hideBowler, setHideBowler] = useState(true);
-  const [isWicket, setIsWicket] = useState(false);
-  const [isChangeBowler, setIsChangeBowler] = useState(false);
-  const [overCompleted, setOverCompleted] = useState(0);
+  const [bowlingPrefs, setBowlingPrefs] = useState({
+    isWicket: false,
+    isBowlerChange: true,
+    isOverCompleted: false,
+    wickets: 0,
+    currentBowler: null,
+    overLimit: matchDetails.limit,
+    overs: 0,
+    ballsLeft: 5,
+  });
+  const [battingPrefs, setBattingPrefs] = useState({
+    strikeBatter: null,
+    nonStrikeBatter: null,
+    isBatterChange: true,
+  });
+
   const [isStarted, setIsStarted] = useState(false);
-  const [strikeBatter, setStrikeBatter] = useState("disabled");
-  const [nonStrikeBatter, setNonStrikeBatter] = useState("disabled");
-  const [currentBowler, setCurrentBowler] = useState("disabled");
-  const [overs, setOvers] = useState();
   const [recentBalls, setRecentBalls] = useState([]);
   const [extra, setExtra] = useState(null);
   const [toggleBatter, setToggleBatter] = useState(false);
-  const [toggleBowler, setToggleBowler] = useState(false);
-  const [wickets, setWickets] = useState(0);
-
-  // console.warn(
-  //   "Bat 1: ",
-  //   bat1,
-  //   " & Bat 2: ",
-  //   bat2,
-  //   " & Inning 1: ",
-  //   inning1,
-  //   " & Inning 2: ",
-  //   inning2,
-  // );
+  const dispatch = useAppDispatch();
 
   const handleShot = (event) => {
     const runs = Number(event.target.value);
 
-    const ball = extra == null ? runs : runs === 0 ? extra : runs + extra;
-    setRecentBalls((prevState) => [ball, ...prevState]);
-    dispatch(teamBowlers({ runs, extra, id: overs.id }));
-    dispatch(teamRuns({ runs, id: strikeBatter, extra }));
-    if (overCompleted < 5 && extra !== "nb" && extra !== "wd") {
-      setOverCompleted((prevState) => prevState + 1);
-    } else if (overCompleted === 5 && extra !== "nb" && extra !== "wd") {
-      if (runs === 1 || runs === 3) {
-        setRecentBalls((prevState) => ["|", ...prevState]);
-        setIsStarted(false);
-        setIsChangeBowler(true);
-        setHideBowler(false);
-        setOverCompleted(0);
-      } else {
-        setStrikeBatter(nonStrikeBatter);
-        setNonStrikeBatter(strikeBatter);
-        setRecentBalls((prevState) => ["|", ...prevState]);
-        setIsStarted(false);
-        setIsChangeBowler(true);
-        setHideBowler(false);
-        setOverCompleted(0);
-      }
+    // Setting recentBalls
+
+    const recentBalls = !extra ? runs : runs === 0 ? extra : runs + extra;
+    setRecentBalls((prevState) => [recentBalls, ...prevState]);
+
+    // dispatching actions
+
+    dispatch(
+      SetBowlerScore({ runs, extra, id: bowlingPrefs.currentBowler.id }),
+    );
+    dispatch(SetBatterScore({ runs, id: battingPrefs.strikeBatter.id, extra }));
+
+    // Substracting balls from over
+
+    if (extra == "wd" || extra == "nb") {
+    } else if (bowlingPrefs.ballsLeft > 0) {
+      setBowlingPrefs({
+        ...bowlingPrefs,
+        ballsLeft: bowlingPrefs.ballsLeft - 1,
+      });
+    } else if (bowlingPrefs.ballsLeft === 0) {
+      setRecentBalls((prevState) => ["|", ...prevState]);
+      setIsStarted(false);
+      setBowlingPrefs({
+        ...bowlingPrefs,
+        isBowlerChange: true,
+        overs: bowlingPrefs.overs + 1,
+        ballsLeft: 5,
+        isOverCompleted: true,
+      });
     }
-    if (strikeBatter !== "disabled") {
-      if ((runs === 1 || runs === 3) && overCompleted !== 5) {
-        setStrikeBatter(nonStrikeBatter);
-        setNonStrikeBatter(strikeBatter);
+
+    // handling batters prefrences
+
+    if (battingPrefs.strikeBatter.id || battingPrefs.strikeBatter.id == 0) {
+      if (bowlingPrefs.ballsLeft === 0) {
+        if (runs % 2 === 0) {
+          setBattingPrefs({
+            ...battingPrefs,
+            strikeBatter: battingPrefs.nonStrikeBatter,
+            nonStrikeBatter: battingPrefs.strikeBatter,
+          });
+        }
+      } else if (runs % 2 == 1) {
+        setBattingPrefs({
+          ...battingPrefs,
+          strikeBatter: battingPrefs.nonStrikeBatter,
+          nonStrikeBatter: battingPrefs.strikeBatter,
+        });
       }
 
+      // handling wicket
       if (extra === "w") {
-        dispatch(
-          teamScore({ i: strikeBatter, type: inning1[strikeBatter], extra }),
-        );
-        setStrikeBatter(null);
-        setIsStarted(false);
-        setWickets((prevWickets) => prevWickets + 1);
-        setIsWicket(true);
+        if (bowlingPrefs.ballsLeft === 0) {
+          setBattingPrefs({
+            ...battingPrefs,
+            strikeBatter: null,
+            isBatterChange: true,
+          });
+          setIsStarted(false);
+          setBowlingPrefs({
+            ...bowlingPrefs,
+            wickets: bowlingPrefs.wickets + 1,
+            isWicket: true,
+            isBowlerChange: true,
+            isOverCompleted: true,
+            ballsLeft: 5,
+          });
+        } else {
+          setBattingPrefs({
+            ...battingPrefs,
+            strikeBatter: null,
+            isBatterChange: true,
+          });
+          setIsStarted(false);
+          setBowlingPrefs({
+            ...bowlingPrefs,
+            wickets: bowlingPrefs.wickets + 1,
+            isWicket: true,
+            ballsLeft: bowlingPrefs.ballsLeft - 1,
+          });
+        }
       }
-    } else {
-      console.error("No striker selected!");
     }
     setExtra(null);
   };
@@ -112,276 +145,234 @@ const Batting = ({
   const handleExtra = (event) => {
     setExtra(event.target.value);
   };
-
   const handleStrikeChange = () => {
-    setStrikeBatter(nonStrikeBatter);
-    setNonStrikeBatter(strikeBatter);
+    setBattingPrefs({
+      ...battingPrefs,
+      strikeBatter: battingPrefs.nonStrikeBatter,
+      nonStrikeBatter: battingPrefs.strikeBatter,
+    });
   };
-
   useEffect(() => {
-    const temp = checkWinner(
-      bat1,
-      bat2,
-      match,
-      inning1,
-      inning2,
-      wickets,
-      batting,
-    );
-    temp;
-    if (wickets == bat1.length - 1) {
-      setComplete(true);
-    }
-    if (wickets == bat2.length - 1) {
-      setWinner(temp);
-      setMatchOver(true);
-      setComplete(true);
-    } else if (temp.winner !== undefined) {
-      setWinner(temp);
-      setMatchOver(true);
-      setComplete(true);
-    }
-    if (match.overs == bat1.score.overs || wickets == match.players - 1) {
-      if (temp.winner !== undefined) {
-        setWinner(temp);
-        setMatchOver(true);
-        setComplete(true);
+    if (matchPrefs.inn1Started && !matchPrefs.inn1Completed) {
+      if (
+        matchDetails.overs == bowlingPrefs.overs ||
+        bowlingPrefs.wickets == matchDetails.players - 1
+      ) {
+        setMatchPrefs({ ...matchPrefs, inn1Completed: true });
+      } else {
+        return;
       }
-      setHideBowler(true);
-      setIsWicket(false);
-      setIsChangeBowler(false);
-      setOverCompleted(0);
-      setIsStarted(false);
-      setStrikeBatter("disabled");
-      setNonStrikeBatter("disabled");
-      setCurrentBowler("disabled");
-      setOvers();
-      setRecentBalls([]);
-      setExtra(null);
-      setToggleBatter(false);
-      setToggleBowler(false);
-      setWickets(0);
-      setComplete(true);
+    } else if (matchPrefs.inn2Started && !matchPrefs.inn2Completed) {
+      if (
+        bowlingPrefs.wickets == matchDetails.players - 1 ||
+        matchDetails.overs === bowlingPrefs.overs ||
+        BattingTeamScore.score.runs > BowlingTeamScore.score.runs
+      ) {
+        setMatchPrefs({ ...matchPrefs, inn2Completed: true, matchOver: true });
+      } else {
+        return;
+      }
+    } else {
+      return;
     }
-  }, [bat1.score.overs, overCompleted, teamScore]);
+    setBowlingPrefs({
+      ...bowlingPrefs,
+      isWicket: false,
+      isBowlerChange: true,
+      ballsLeft: 5,
+      wickets: 0,
+      currentBowler: null,
+    });
+    setIsStarted(false);
+    setBattingPrefs({
+      isBatterChange: true,
+      strikeBatter: null,
+      nonStrikeBatter: null,
+    });
+    setRecentBalls([]);
+    setExtra(null);
+    setToggleBatter(false);
+  }, [
+    bowlingPrefs.ballsLeft,
+    bowlingPrefs.isBowlerChange,
+    bowlingPrefs.wickets,
+  ]);
 
   return (
     <div className={`Container flex-col`}>
-      {match.customPlayer ? (
-        isStarted ? (
+      {matchDetails.customPlayer ? (
+        isStarted &&
+        !bowlingPrefs.isBowlerChange &&
+        !battingPrefs.isBatterChange ? (
           <ScoreBoard
             handleStrikeChange={handleStrikeChange}
-            overs={overs}
-            inning1={inning1}
-            inning2={inning2}
             handleShot={handleShot}
             recentBalls={recentBalls}
-            strike={strikeBatter}
-            wicket={wickets}
+            battingPrefs={battingPrefs}
+            bowlingPrefs={bowlingPrefs}
             handleExtra={handleExtra}
-            bowler={currentBowler}
-            setBowler={setCurrentBowler}
-            setStrike={setStrikeBatter}
-            nonStrike={nonStrikeBatter}
-            setNonStrike={setNonStrikeBatter}
+            setBowlingPrefs={setBowlingPrefs}
+            setBattingPrefs={setBattingPrefs}
             team1={team1}
             team2={team2}
-            bat1={bat1}
-            bat2={bat2}
+            BattingTeamScore={BattingTeamScore}
+            BowlingTeamScore={BowlingTeamScore}
           />
-        ) : !isChangeBowler && !isWicket ? (
+        ) : bowlingPrefs.isBowlerChange &&
+          !bowlingPrefs.isOverCompleted &&
+          !bowlingPrefs.isWicket ? (
           <div className="select-div">
             <SelectBatter
-              match={match}
+              SetBattersList={SetBattersList}
+              matchDetails={matchDetails}
               setStart={setIsStarted}
-              scoring={teamScore}
-              score={bat1}
-              setInning={setInning1}
+              SetTeamScore={SetTeam1Score}
+              TeamScore={BattingTeamScore}
+              SetBatterScore={SetBatterScore}
               dispatch={dispatch}
               toggle={toggleBatter}
               setToggle={setToggleBatter}
-              inning={inning1}
-              strike={strikeBatter}
-              setW={setIsWicket}
-              wicket={wickets}
-              nonStrike={nonStrikeBatter}
-              setStrike={setStrikeBatter}
-              setNonStrike={setNonStrikeBatter}
+              battingPrefs={battingPrefs}
+              setBowlingPrefs={setBowlingPrefs}
+              bowlingPrefs={bowlingPrefs}
+              setBattingPrefs={setBattingPrefs}
             />
-
-            <SelectBowler
-              setInning={setInning2}
-              setChangeBowler={setIsChangeBowler}
-              setStart={setIsStarted}
-              scoring={teamBowling}
-              score={bat2}
-              dispatch={dispatch}
-              match={match}
-              toggle={toggleBowler}
-              setToggle={setToggleBowler}
-              setBowler={setCurrentBowler}
-              setOvers={setOvers}
-              inning={inning2}
-              bowler={currentBowler}
-              overs={overs}
-            />
+            {bowlingPrefs.isBowlerChange && !bowlingPrefs.isOverCompleted && (
+              <SelectBowler
+                setStart={setIsStarted}
+                TeamScore={BowlingTeamScore}
+                dispatch={dispatch}
+                SetBowlersList={SetBowlersList}
+                setBowlingPrefs={setBowlingPrefs}
+                bowlingPrefs={bowlingPrefs}
+              />
+            )}
           </div>
         ) : (
           <>
-            {isWicket && (
+            {bowlingPrefs.isWicket && battingPrefs.isBatterChange && (
               <div className="select-div z-40">
                 <NewBatter
-                  setInning={setInning1}
+                  bowlingPrefs={bowlingPrefs}
                   setStart={setIsStarted}
-                  wicket={wickets}
-                  setW={setIsWicket}
-                  inning={inning1}
-                  strike={strikeBatter}
-                  nonStrike={nonStrikeBatter}
-                  setStrike={setStrikeBatter}
+                  setBowlingPrefs={setBowlingPrefs}
+                  battingPrefs={battingPrefs}
+                  SetBattersList={SetBattersList}
+                  BattingTeamScore={BattingTeamScore}
+                  setBattingPrefs={setBattingPrefs}
                   dispatch={dispatch}
-                  scoring={teamScore}
-                  batting={bat1}
-                  match={match}
+                  SetTeam1Score={SetTeam1Score}
+                  matchDetails={matchDetails}
                 />
               </div>
             )}
-            {isChangeBowler && (
+            {bowlingPrefs.isBowlerChange && bowlingPrefs.currentBowler && (
               <NewBowler
-                setInning={setInning2}
-                setChangeBowler={setIsChangeBowler}
-                setStart={setIsStarted}
-                scoring={teamBowling}
-                score={bat2}
+                Team={BowlingTeamScore}
+                bowlingPrefs={bowlingPrefs}
                 dispatch={dispatch}
-                match={match}
-                toggle={toggleBowler}
-                setToggle={setToggleBowler}
-                setBowler={setCurrentBowler}
-                setOvers={setOvers}
-                inning={inning2}
-                bowler={currentBowler}
-                overs={overs}
+                SetBowlersList={SetBowlersList}
+                matchDetails={matchDetails}
+                setBowlingPrefs={setBowlingPrefs}
+                setStart={setIsStarted}
               />
             )}
           </>
         )
-      ) : isStarted ? (
+      ) : isStarted &&
+        !bowlingPrefs.isBowlerChange &&
+        !battingPrefs.isBatterChange ? (
         <ScoreBoard
           handleStrikeChange={handleStrikeChange}
-          overs={overs}
-          inning1={inning1}
-          inning2={inning2}
           handleShot={handleShot}
           recentBalls={recentBalls}
-          strike={strikeBatter}
-          wicket={wickets}
+          battingPrefs={battingPrefs}
+          bowlingPrefs={bowlingPrefs}
           handleExtra={handleExtra}
-          bowler={currentBowler}
-          setBowler={setCurrentBowler}
-          setStrike={setStrikeBatter}
-          nonStrike={nonStrikeBatter}
-          setNonStrike={setNonStrikeBatter}
+          setBowlingPrefs={setBowlingPrefs}
+          setBattingPrefs={setBattingPrefs}
           team1={team1}
           team2={team2}
-          bat1={bat1}
-          bat2={bat2}
+          BattingTeamScore={BattingTeamScore}
+          BowlingTeamScore={BowlingTeamScore}
         />
-      ) : !isChangeBowler && !isWicket ? (
+      ) : bowlingPrefs.isBowlerChange &&
+        !bowlingPrefs.isOverCompleted &&
+        !bowlingPrefs.isWicket ? (
         <div className="select-div">
-          {hideBowler && (
-            <TypeOpeners
-              setHideBowler={setHideBowler}
-              setCap={setCapTeam1}
-              isCap={capTeam1}
-              match={match}
-              setStart={setIsStarted}
-              scoring={teamScore}
-              score={bat1}
-              setInning={setInning1}
-              dispatch={dispatch}
-              toggle={toggleBatter}
-              setToggle={setToggleBatter}
-              inning={inning1}
-              strike={strikeBatter}
-              setW={setIsWicket}
-              wicket={wickets}
-              nonStrike={nonStrikeBatter}
-              setStrike={setStrikeBatter}
-              setNonStrike={setNonStrikeBatter}
-            />
-          )}
+          <TypeOpeners
+            SetBattingPlayers={SetBattingPlayers}
+            SetBattersList={SetBattersList}
+            setCap={setCapTeam1}
+            isCap={capTeam1}
+            matchDetails={matchDetails}
+            SetTeam1Score={SetTeam1Score}
+            BattingTeamScore={BattingTeamScore}
+            dispatch={dispatch}
+            toggle={toggleBatter}
+            setToggle={setToggleBatter}
+            battingPrefs={battingPrefs}
+            setBowlingPrefs={setBowlingPrefs}
+            bowlingPrefs={bowlingPrefs}
+            setBattingPrefs={setBattingPrefs}
+          />
+          {/* )} */}
 
-          {!hideBowler && (
-            <TypeBowler
-              setHideBowler={setHideBowler}
-              hideBowler={hideBowler}
-              setCap={setCapTeam2}
-              isCap={capTeam2}
-              setInning={setInning2}
-              setChangeBowler={setIsChangeBowler}
-              setStart={setIsStarted}
-              scoring={teamBowling}
-              score={bat2}
-              dispatch={dispatch}
-              match={match}
-              toggle={toggleBowler}
-              setToggle={setToggleBowler}
-              setBowler={setCurrentBowler}
-              setOvers={setOvers}
-              inning={inning2}
-              bowler={currentBowler}
-              overs={overs}
-            />
-          )}
+          {bowlingPrefs.isBowlerChange &&
+            !bowlingPrefs.isOverCompleted &&
+            !battingPrefs.isBatterChange && (
+              <TypeBowler
+                SetBowlingPlayers={SetBowlingPlayers}
+                SetBowlersList={SetBowlersList}
+                setCap={setCapTeam2}
+                isCap={capTeam2}
+                setStart={setIsStarted}
+                BowlingTeamScore={BowlingTeamScore}
+                dispatch={dispatch}
+                matchDetails={matchDetails}
+                setBowlingPrefs={setBowlingPrefs}
+                bowlingPrefs={bowlingPrefs}
+              />
+            )}
         </div>
       ) : (
         <>
-          {isWicket && (
-            <div className="select-div z-40">
-              <TypeNewBatter
-                overCompleted={overCompleted}
-                hideBowler={hideBowler}
-                setHideBowler={setHideBowler}
-                setCap={setCapTeam1}
-                isCap={capTeam1}
-                setInning={setInning1}
+          {bowlingPrefs.isWicket &&
+            bowlingPrefs.wickets !== matchDetails.players - 1 && (
+              <div className="select-div z-40">
+                <TypeNewBatter
+                  SetBattingPlayers={SetBattingPlayers}
+                  SetBattersList={SetBattersList}
+                  setBowlingPrefs={setBowlingPrefs}
+                  bowlingPrefs={bowlingPrefs}
+                  setCap={setCapTeam1}
+                  isCap={capTeam1}
+                  setStart={setIsStarted}
+                  battingPrefs={battingPrefs}
+                  setBattingPrefs={setBattingPrefs}
+                  dispatch={dispatch}
+                  SetTeam1Score={SetTeam1Score}
+                  BattingTeamScore={BattingTeamScore}
+                  matchDetails={matchDetails}
+                />
+              </div>
+            )}
+          {bowlingPrefs.isBowlerChange &&
+            bowlingPrefs.currentBowler &&
+            !battingPrefs.isBatterChange && (
+              <TypeNewBowler
+                SetBowlingPlayers={SetBowlingPlayers}
+                SetBowlersList={SetBowlersList}
+                setCap={setCapTeam2}
+                isCap={capTeam2}
                 setStart={setIsStarted}
-                wicket={wickets}
-                setW={setIsWicket}
-                inning={inning1}
-                strike={strikeBatter}
-                nonStrike={nonStrikeBatter}
-                setStrike={setStrikeBatter}
+                BowlingTeamScore={BowlingTeamScore}
                 dispatch={dispatch}
-                scoring={teamScore}
-                batting={bat1}
-                match={match}
+                matchDetails={matchDetails}
+                setBowlingPrefs={setBowlingPrefs}
+                bowlingPrefs={bowlingPrefs}
               />
-            </div>
-          )}
-          {isChangeBowler && !hideBowler && (
-            <TypeNewBowler
-              setHideBowler={setHideBowler}
-              hideBowler={hideBowler}
-              setCap={setCapTeam2}
-              isCap={capTeam2}
-              setInning={setInning2}
-              setChangeBowler={setIsChangeBowler}
-              setStart={setIsStarted}
-              scoring={teamBowling}
-              score={bat2}
-              dispatch={dispatch}
-              match={match}
-              toggle={toggleBowler}
-              setToggle={setToggleBowler}
-              setBowler={setCurrentBowler}
-              setOvers={setOvers}
-              inning={inning2}
-              bowler={currentBowler}
-              overs={overs}
-            />
-          )}
+            )}
         </>
       )}
     </div>

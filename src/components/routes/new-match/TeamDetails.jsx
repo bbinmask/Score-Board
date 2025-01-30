@@ -1,81 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import MatchVs from "./MatchVs";
 import { useAppDispatch } from "../../../store/hooks";
-import { matching } from "../../../store/currentMatch";
+import { SetMatch } from "../../../store/currentMatch";
 const TeamDetails = () => {
   const dispatch = useAppDispatch();
 
   const [toggle, setToggle] = useState(false);
-  const [match, setMatch] = useState({});
-  const [overs, setOvers] = useState(1);
-  const [players, setPlayers] = useState(2);
-  const [limit, setLimit] = useState(1);
-  const customPlayersYesRef = useRef();
-  const isSeriesYesRef = useRef();
-  const firstRef = useRef();
-  const secondRef = useRef();
-  const battingRef = useRef();
+  const [matchDetails, setMatchDetails] = useState({
+    teams: {
+      team1: "Team 1",
+      team2: "Team 2",
+    },
+    overs: 1,
+    players: 2,
+    limit: 1,
+    customPlayer: false,
+    isSeries: false,
+    battingFirst: "Team 1",
+    battingSecond: "Team 2",
+  });
 
-  const handleToggle = (event) => {
-    event.preventDefault();
-    const team1 = firstRef.current.value || "Team First";
-    const team2 = secondRef.current.value || "Team Second";
-    const batting = battingRef.current.checked ? team1 : team2;
-    const customPlayer = customPlayersYesRef.current.checked ? true : false;
-    const isSeries = isSeriesYesRef.current.checked ? true : false;
+  const handleToggle = (e) => {
+    e.preventDefault();
     const confirm = window.confirm("You want to proceed!");
     if (confirm) {
-      dispatch(
-        matching({
-          teams: { team1, team2 },
-          overs,
-          players,
-          limit,
-          customPlayer,
-          isSeries,
-          batting,
-        }),
-      );
-
-      setMatch({
-        overs,
-        players,
-        limit,
-        customPlayer,
-        isSeries,
-        teams: { team1, team2 },
-        batting,
-      });
-      setToggle((t) => !t);
-    }
-  };
-  const handleOvers = (event) => {
-    const i = Number(event.target.value);
-    setOvers(i);
-    if (overs > players) {
-      const lim = Math.ceil(overs / players);
-      setLimit(lim);
-    }
-  };
-
-  const handlePlayers = (event) => {
-    const i = Number(event.target.value);
-    setPlayers(i);
-    if (overs > players) {
-      const lim = Math.ceil(overs / players);
-      setLimit(lim);
-    }
-  };
-  const handleLimit = (event) => {
-    const i = Number(event.target.value);
-    const limit = i;
-    const max = event.target.max;
-    if (Number(limit) > Number(max)) {
-      setLimit(max);
-    } else {
-      setLimit(limit);
+      dispatch(SetMatch(matchDetails));
+      setToggle(true);
     }
   };
 
@@ -83,7 +35,7 @@ const TeamDetails = () => {
     <>
       {!toggle ? (
         <div className="flex flex-col justify-evenly p-2 lg:flex-row">
-          <div className="match-div">
+          <div className="matchDetails-div">
             <form
               onSubmit={handleToggle}
               className={`${!toggle ? "flex" : "hidden"} flex-col items-center rounded-md bg-zinc-100 p-2`}
@@ -97,7 +49,22 @@ const TeamDetails = () => {
                 </span>
                 <input
                   required
-                  onChange={handlePlayers}
+                  onChange={(e) => {
+                    if (matchDetails.overs > matchDetails.players) {
+                      const limit = Math.ceil(
+                        matchDetails.overs / matchDetails.players,
+                      );
+                      setMatchDetails({
+                        ...matchDetails,
+                        players: Number(e.target.value),
+                        limit,
+                      });
+                    } else
+                      setMatchDetails({
+                        ...matchDetails,
+                        players: Number(e.target.value),
+                      });
+                  }}
                   min={2}
                   defaultValue={2}
                   max={15}
@@ -117,7 +84,24 @@ const TeamDetails = () => {
                 </span>
                 <input
                   required
-                  onChange={handleOvers}
+                  onChange={(e) => {
+                    const i = Number(e.target.value);
+                    if (matchDetails.overs > matchDetails.players) {
+                      const limit = Math.ceil(
+                        matchDetails.overs / matchDetails.players,
+                      );
+
+                      setMatchDetails({
+                        ...matchDetails,
+                        overs: i,
+                        limit: limit,
+                      });
+                    } else
+                      setMatchDetails({
+                        ...matchDetails,
+                        overs: i,
+                      });
+                  }}
                   defaultValue={1}
                   min={1}
                   placeholder="Select Overs"
@@ -136,12 +120,34 @@ const TeamDetails = () => {
                 </span>
                 <input
                   required
-                  onChange={handleLimit}
-                  max={overs != 1 ? Math.ceil(overs / 2) : 1}
-                  min={players >= overs ? 1 : Math.ceil(overs / players)}
+                  onChange={(e) => {
+                    const limit = Number(e.target.value);
+                    const max = Number(e.target.max);
+                    if (limit > max) {
+                      setMatchDetails({
+                        ...matchDetails,
+                        limit: max,
+                      });
+                    } else {
+                      setMatchDetails({
+                        ...matchDetails,
+                        limit,
+                      });
+                    }
+                  }}
+                  max={
+                    matchDetails.overs != 1
+                      ? Math.ceil(matchDetails.overs / 2)
+                      : 1
+                  }
+                  min={
+                    matchDetails.players >= matchDetails.overs
+                      ? 1
+                      : Math.ceil(matchDetails.overs / matchDetails.players)
+                  }
                   placeholder="Overs Limit"
                   type="number"
-                  value={limit}
+                  value={matchDetails.limit}
                   className="form-control"
                   aria-label="Sizing example input"
                   aria-describedby="inputGroup-sizing-default"
@@ -158,7 +164,12 @@ const TeamDetails = () => {
                 <input
                   defaultValue={`Team 1`}
                   required
-                  ref={firstRef}
+                  onChange={(e) =>
+                    setMatchDetails({
+                      ...matchDetails,
+                      [teams.team1]: e.target.value,
+                    })
+                  }
                   placeholder="Enter First Team Name"
                   type="text"
                   className="form-control"
@@ -177,7 +188,12 @@ const TeamDetails = () => {
                 <input
                   defaultValue={`Team 2`}
                   required
-                  ref={secondRef}
+                  onChange={(e) =>
+                    setMatchDetails({
+                      ...matchDetails,
+                      [teams.team2]: e.target.value,
+                    })
+                  }
                   placeholder="Enter Second Team Name"
                   type="text"
                   className="form-control"
@@ -188,33 +204,45 @@ const TeamDetails = () => {
 
               <div className="more-info my-2 w-full">
                 <ul className="m-0 flex w-full flex-col gap-2 p-0">
-                  <li className="info-radio-detail">
-                    <label className="span w-36 py-2">First Batting</label>
-                    <div className="yes-no">
-                      <div className="yes">
-                        <label className="overflow-hidden">Team 1</label>
+                  <li className="rounded-lg">
+                    <span className="span rounded-md p-2">
+                      Which team will bat first?
+                    </span>
+
+                    <div className="mt-2 flex w-full justify-evenly rounded-md bg-white text-center">
+                      <div className="flex w-full justify-between px-4 py-2">
+                        <label>Team 1</label>
                         <input
                           required
-                          ref={battingRef}
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              battingFirst: "team1",
+                              battingSecond: "team2",
+                            })
+                          }
                           className="form-check-input"
                           type="radio"
                           value={true}
                           name="batting"
-                          id="yes"
                           defaultChecked
                         />
                       </div>
-                      <div className="no">
-                        <label className="overflow-hidden" htmlFor="no">
-                          Team 2
-                        </label>
+                      <div className="flex w-full justify-between px-4 py-2">
+                        <label>Team 2</label>
                         <input
                           required
-                          value={false}
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              battingFirst: "team2",
+                              battingSecond: "team1",
+                            })
+                          }
                           className="form-check-input"
                           type="radio"
+                          value={true}
                           name="batting"
-                          id="no"
                         />
                       </div>
                     </div>
@@ -226,7 +254,12 @@ const TeamDetails = () => {
                         <label htmlFor="yes">Yes</label>
                         <input
                           required
-                          ref={customPlayersYesRef}
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              customPlayer: e.currentTarget.checked,
+                            })
+                          }
                           className="form-check-input"
                           type="radio"
                           value={true}
@@ -242,6 +275,13 @@ const TeamDetails = () => {
                           required
                           className="form-check-input"
                           type="radio"
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              customPlayer: !e.currentTarget.checked,
+                            })
+                          }
+                          value={false}
                           name="set-players"
                           id="no"
                           defaultChecked
@@ -256,7 +296,12 @@ const TeamDetails = () => {
                         <label htmlFor="yes">Yes</label>
                         <input
                           required
-                          ref={isSeriesYesRef}
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              isSeries: e.currentTarget.checked,
+                            })
+                          }
                           className="form-check-input"
                           type="radio"
                           value={true}
@@ -271,6 +316,13 @@ const TeamDetails = () => {
                           required
                           className="form-check-input"
                           type="radio"
+                          onChange={(e) =>
+                            setMatchDetails({
+                              ...matchDetails,
+                              isSeries: !e.currentTarget.checked,
+                            })
+                          }
+                          value={false}
                           name="is-series"
                           id="flexRadioDefault2"
                           defaultChecked
@@ -303,7 +355,7 @@ const TeamDetails = () => {
           </div>
         </div>
       ) : (
-        <MatchVs match={match} />
+        <MatchVs matchDetails={matchDetails} />
       )}
     </>
   );

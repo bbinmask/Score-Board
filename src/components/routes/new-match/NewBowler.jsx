@@ -1,47 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 const NewBowler = ({
-  setBowler,
-  setOvers,
+  Team,
+  setBowlingPrefs,
+  SetBowlersList,
+  bowlingPrefs,
   setStart,
-  inning,
-  bowler,
-  overs,
-  match,
   dispatch,
-  scoring,
-  setChangeBowler,
+  matchDetails,
 }) => {
   const [toggle, setToggle] = useState(false);
 
   const [selectedBowler, setSelectedBowler] = useState(null);
 
   const handleBowler = (event) => {
-    const i = Number(event.target.value);
-    setSelectedBowler(i);
+    const bowler = JSON.parse(event.target.value);
+    setSelectedBowler(bowler);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (selectedBowler !== null) {
-      dispatch(scoring({ i: selectedBowler, type: inning[selectedBowler] }));
-      if (overs) {
-        setBowler(overs);
-      }
-      setOvers({ id: selectedBowler, limit: match.limit });
+      dispatch(SetBowlersList({ id: selectedBowler.id }));
+      setBowlingPrefs({
+        ...bowlingPrefs,
+        currentBowler: selectedBowler,
+        isBowlerChange: false,
+      });
       setSelectedBowler(null);
+      setToggle(true);
+      setStart(true);
+    } else {
+      return alert("Select a bowler!");
     }
-    setToggle(true);
-    setStart(true);
-    setChangeBowler(false);
   };
-
-  useEffect(() => {
-    if (overs) {
-      setBowler(overs);
-    }
-  }, [overs, setBowler, inning]);
-
   return (
     <>
       {!toggle && (
@@ -50,28 +42,32 @@ const NewBowler = ({
             className="batter-select absolute left-12 top-16 z-30 h-72 w-80 rounded-md bg-slate-50 p-2 shadow-3xl"
             onSubmit={handleSubmit}
           >
-            <h4 className="text-center">Bowler</h4>
+            <h4 className="text-center">New Bowler</h4>
             <select
               required
               onChange={handleBowler}
               className="form-select opt"
-              defaultValue={"disabled"}
+              defaultValue={""}
             >
-              <option className="opt" value={"disabled"} disabled>
+              <option className="opt" value={""} selected disabled>
                 Select Bowler
               </option>
-              {inning.map((player, index) => {
-                if (player.overs.limit == 0) {
+              {Team.playersList.map((player, index) => {
+                console.log(player);
+                if (
+                  index === bowlingPrefs.currentBowler.id ||
+                  player.bowling.limit === matchDetails.limit
+                ) {
                   return;
                 } else {
                   return (
                     <option
                       className="opt"
                       key={index}
-                      value={index}
-                      disabled={index === (overs ? bowler.id : -1)}
+                      value={JSON.stringify(player)}
+                      disabled={player.bowling.limit === matchDetails.limit}
                     >
-                      {player.name}
+                      {player.playerDetails.name}
                     </option>
                   );
                 }

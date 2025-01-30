@@ -37,3 +37,7 @@ next-env.d.ts
 .prettierrc
 .vscode
 random.js
+
+# Customized
+
+.jsx

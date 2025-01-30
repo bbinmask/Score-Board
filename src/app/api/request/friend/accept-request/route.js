@@ -27,10 +27,6 @@ export async function POST(req) {
     );
 
     const already = await requestedUser.friends.includes(userId.toString());
-    console.log(already);
-    console.log(loggedInUser.friends);
-
-    console.log("alreadyFriends: ", alreadyFriends);
 
     if (alreadyFriends !== -1) {
       requestedUser.friends = await requestedUser.friends.filter(
@@ -75,7 +71,6 @@ export async function POST(req) {
 //   try {
 //     const { requestedUserId } = await req.json();
 //     const userId = await req.cookies.get("user-id")?.value;
-//     console.log(requestedUserId);
 //     if (!requestedUserId || !userId)
 //       return NextResponse.json({ status: 404, message: "Bad request 404" });
 

@@ -36,7 +36,7 @@ const SignUp = () => {
 
     if (password !== repeatPassword) {
       setSignup(false);
-      alert("Password is not matching");
+      alert("Password did not match!");
       return;
     }
     if (!available) {

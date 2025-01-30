@@ -1,87 +1,83 @@
 import React, { useRef, useState } from "react";
 import Suggestion from "./Suggestion";
 const TypeNewBatter = ({
-  inning,
-  strike,
-  nonStrike,
-  setW,
-  hideBowler,
-  match,
-  overCompleted,
+  battingPrefs,
+  bowlingPrefs,
+  setBowlingPrefs,
+  setBattingPrefs,
+  SetBattingPlayers,
+  BattingTeamScore,
+  matchDetails,
   isCap,
-  setHideBowler,
   setCap,
-  wicket,
-  setInning,
-  setStrike,
   setStart,
-  setNonStrike,
-  toggle,
-  setToggle,
   dispatch,
-  scoring,
-  score,
+  SetBattersList,
 }) => {
-  console.log(inning);
-  const playerRef = useRef();
   const captain = useRef();
-  const [pl, setPl] = useState({});
+  const [player, setPlayer] = useState({});
   const [search, setSearch] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const player = playerRef.current.value;
-    let cap = null;
-    if (!isCap) cap = captain.current.checked;
-
+    let cap = false;
     if (!isCap) {
-      if (cap) setCap(true);
+      cap = captain.current.checked;
+      if (cap) {
+        setCap(true);
+      }
     }
 
     if (!player) {
-      alert("Name field cannot be empty!");
+      return alert("Name field cannot be empty!");
     }
-    const i = inning.length;
+    const id = BattingTeamScore.playersList.length;
     let playerObject = {
-      name: player,
-      position: "All-rounder",
-      bowling: false,
-      captaion: cap,
-      wk: false,
-      out: false,
-      playing: false,
-      runs: 0,
-      id: i,
-      status: false,
-      fours: 0,
-      sixes: 0,
-      overs: {
-        over: 0,
-        limit: match.limit,
-        dot: 0,
-        balls: 0,
-        maiden: 0,
-        runs: 0,
-        wicket: 0,
+      id: id,
+      playerDetails: {
+        name: player,
+        position: "All-rounder",
+        captain: cap,
+        wk: false,
       },
-      balls: 0,
+      batting: {
+        out: false,
+        outBy: null,
+        playing: false,
+        runs: 0,
+        dots: 0,
+        balls: 0,
+        fours: 0,
+        sixes: 0,
+      },
+      bowling: {
+        playing: false,
+        overs: 0,
+        limit: 0,
+        dots: 0,
+        balls: 0,
+        maidens: 0,
+        runs: 0,
+        wickets: 0,
+      },
+      fielding: {
+        runOut: [{ name: null, id: null }],
+        catchOut: [{ name: null, id: null }],
+      },
     };
 
-    setStrike(i);
-    await dispatch(setInning({ type: playerObject, id: false }));
-    await dispatch(scoring({ i: i, type: playerObject }));
-
-    setW(false);
-    if (hideBowler) {
-      setHideBowler(false);
-    }
-    if (overCompleted !== 0) {
-      setStart(true);
-    }
+    setBattingPrefs({
+      ...battingPrefs,
+      strikeBatter: playerObject,
+      isBatterChange: false,
+    });
+    dispatch(SetBattingPlayers({ data: playerObject, customPlayer: false }));
+    dispatch(SetBattersList({ id }));
+    setBowlingPrefs({ ...bowlingPrefs, isWicket: false });
+    setStart(true);
   };
-
   const handleBat = (batter) => {
-    setPl(batter);
+    setPlayer(batter);
   };
   return (
     <div className="relative flex h-full w-full flex-col items-center sm:items-start">
@@ -95,11 +91,14 @@ const TypeNewBatter = ({
             required
             onChange={(e) => {
               setSearch(e.target.value.toLowerCase());
-              setPl(e.target.value);
+              setPlayer(e.target.value);
             }}
-            readOnly={match.players > inning.length ? false : true}
-            value={pl ? pl.name : ""}
-            ref={playerRef}
+            readOnly={
+              matchDetails.players > BattingTeamScore.playersList.length
+                ? false
+                : true
+            }
+            value={player ? player?.playerDetails?.name : ""}
             type="text"
             className="input w-full border-1"
             placeholder="Enter batter name"
@@ -123,13 +122,15 @@ const TypeNewBatter = ({
           Add
         </button>
       </form>
-      {inning.length !== 0 && (
+      {BattingTeamScore.playersList.length !== 0 && (
         <Suggestion
-          inning={inning}
+          TeamScore={BattingTeamScore}
           search={search}
-          pl={pl}
-          handlePl={handleBat}
-          isBat={true}
+          player={player}
+          handlePlayer={handleBat}
+          forBat={true}
+          matchDetails={matchDetails}
+          playerPrefs={battingPrefs}
         />
       )}
     </div>

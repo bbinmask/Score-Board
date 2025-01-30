@@ -23,7 +23,7 @@ const MyTeams = () => {
         setAllTeams(teams);
         teams?.map((team, i) => {
           setActive((prev) => {
-            return { type: { ...prev, id: team._id } };
+            return { data: { ...prev, id: team._id } };
           });
         });
       } catch (error) {
@@ -31,7 +31,6 @@ const MyTeams = () => {
       }
     };
     fetchData();
-    console.log(active);
   }, []);
 
   return (

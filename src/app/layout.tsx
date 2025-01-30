@@ -22,6 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <title>Score Board</title>
       <link rel="icon" type="image/x-icon" href="/img/logo.png"></link>
+
       {/* <Suspense fallback={<Loading />}> */}
       <StoreProvider>
         <body className={``}>

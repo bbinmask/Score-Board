@@ -2,84 +2,87 @@ import React, { useRef, useState, useEffect } from "react";
 import Suggestion from "./Suggestion";
 
 const TypeBowler = ({
-  setBowler,
-  setOvers,
-  setHideBowler,
+  SetBowlingPlayers,
+  BowlingTeamScore,
+  matchDetails,
+  setBowlingPrefs,
+  bowlingPrefs,
   setStart,
-  inning,
   isCap,
   setCap,
-  bowler,
-  setInning,
-  overs,
-  match,
-  toggle,
-  setToggle,
   dispatch,
-  scoring,
-  setChangeBowler,
+  SetBowlersList,
 }) => {
   const captain = useRef();
   const [search, setSearch] = useState("");
-  const [pl, setPl] = useState({});
+  const [player, setPl] = useState(null);
   const handleBowl = (bowler) => {
     setPl(bowler);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    let cap = null;
-    if (!isCap) cap = captain.current.checked;
-
+    let cap = false;
     if (!isCap) {
-      if (cap) setCap(true);
+      cap = captain.current.checked;
+      if (cap) {
+        setCap(true);
+      }
     }
 
-    if (pl.id == 0 || pl.id) {
-      dispatch(scoring({ i: pl.id, type: pl }));
-
-      setOvers({ id: pl.id, limit: match.limit });
+    if (player.id == 0 || player.id) {
+      dispatch(SetBowlersList({ id: player.id }));
+      setBowlingPrefs({
+        ...bowlingPrefs,
+        isBowlerChange: false,
+        currentBowler: player,
+      });
     } else {
+      const id = BowlingTeamScore.playersList.length;
       let playerObject = {
-        name: pl,
-        position: "All-rounder",
-        bowling: false,
-        out: false,
-        playing: false,
-        captaion: cap,
-        wk: false,
-        runs: 0,
-        id: inning.length,
-        status: false,
-        fours: 0,
-        sixes: 0,
-        overs: {
-          over: 0,
-          limit: match.limit,
-          dot: 0,
-          balls: 0,
-          maiden: 0,
-          runs: 0,
-          wicket: 0,
+        id,
+        playerDetails: {
+          name: player,
+          position: "All-rounder",
+          captain: cap,
+          wk: false,
         },
-        balls: 0,
+        batting: {
+          out: false,
+          outBy: null,
+          playing: false,
+          runs: 0,
+          dots: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
+        },
+        bowling: {
+          playing: false,
+          overs: 0,
+          limit: 0,
+          dots: 0,
+          balls: 0,
+          maidens: 0,
+          runs: 0,
+          wickets: 0,
+        },
+        fielding: {
+          runOut: [{ name: null, id: null }],
+          catchOut: [{ name: null, id: null }],
+        },
       };
-      dispatch(setInning({ type: playerObject, id: false }));
-      dispatch(scoring({ i: inning.length, type: playerObject }));
-      setOvers({ id: inning.length, limit: match.limit });
+      dispatch(SetBowlingPlayers({ data: playerObject, customPlayer: false }));
+      dispatch(SetBowlersList({ id }));
+      setBowlingPrefs({
+        ...bowlingPrefs,
+        isBowlerChange: false,
+        currentBowler: playerObject,
+      });
     }
-
-    if (overs) {
-      setBowler(overs);
-    }
-    setToggle((t) => !t);
     setStart(true);
-    setChangeBowler(false);
-    setHideBowler(true);
   };
-
-  useEffect(() => {}, [inning, pl]);
-
+  useEffect(() => {}, [BowlingTeamScore, player]);
   return (
     <div className="relative flex flex-col items-center bg-slate-50 md:items-start">
       <form
@@ -93,8 +96,12 @@ const TypeBowler = ({
               setSearch(e.target.value.toLowerCase());
               setPl(e.target.value);
             }}
-            readOnly={match.players > inning.length ? false : true}
-            value={pl ? pl.name : ""}
+            readOnly={
+              matchDetails.players > BowlingTeamScore.playersList.length
+                ? false
+                : true
+            }
+            value={player ? player?.playerDetails?.name : ""}
             type="text"
             className="input w-full border-1"
             placeholder="Enter bowler name"
@@ -119,13 +126,17 @@ const TypeBowler = ({
           Add
         </button>
       </form>
-      <Suggestion
-        inning={inning}
-        search={search}
-        pl={pl}
-        handlePl={handleBowl}
-        isBat={false}
-      />
+
+      {BowlingTeamScore.playersList.length !== 0 && (
+        <Suggestion
+          TeamScore={BowlingTeamScore}
+          search={search}
+          player={player}
+          handlePlayer={handleBowl}
+          forBat={false}
+          matchDetails={matchDetails}
+        />
+      )}
     </div>
   );
 };

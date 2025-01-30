@@ -1,18 +1,21 @@
 import React from "react";
+import findPos from "../../../utils/functions/player-utils/findPos";
 
-const LineUp = ({ team }) => {
+const LineUp = ({ teamsArr }) => {
   return (
-    <div>
-      <ol className="list-group list-group-flush">
-        {team.team.map((t, i) => {
-          return (
-            <li className="list-group-item m-1" key={i}>
-              {t.name}
-            </li>
-          );
-        })}
+    <>
+      <ol
+        style={{ listStyleType: "decimal" }}
+        className="font-serif text-lg leading-7"
+        type="1"
+      >
+        {teamsArr.team.map((player, i) => (
+          <li className="m-1" key={i}>
+            {`${player.playerDetails.name} ${findPos(player)}`}
+          </li>
+        ))}
       </ol>
-    </div>
+    </>
   );
 };
 

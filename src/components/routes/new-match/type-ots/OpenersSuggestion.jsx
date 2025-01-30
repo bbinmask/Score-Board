@@ -1,7 +1,7 @@
 import React from "react";
 
 const OpenersSuggestion = ({
-  inning,
+  BattingTeamScore,
   player1,
   player2,
   search,
@@ -12,23 +12,25 @@ const OpenersSuggestion = ({
   setActive1,
   setActive2,
 }) => {
+  // console.log(BattingTeamScore);
   return (
     <>
-      <ul className="list absolute left-36 top-64 z-50 flex w-56 flex-col gap-2 rounded-md bg-slate-50 p-0 shadow-3xl lg:left-2/3 lg:top-12">
-        <li className="mt-2 text-center font-sans font-semibold text-gray-700">
-          Previous
-        </li>
-        {inning.length !== 0 &&
-          inning
+      {BattingTeamScore.playersList.length !== 0 && (
+        <ul className="list absolute left-36 top-64 z-50 flex w-56 flex-col gap-2 rounded-md bg-slate-50 p-0 shadow-3xl lg:left-2/3 lg:top-12">
+          <li className="mt-2 text-center font-sans font-semibold text-gray-700">
+            Previous
+          </li>
+          {BattingTeamScore.playersList
             .filter((player) => {
               return search === ""
                 ? player
-                : player.name.toLowerCase().includes(search);
+                : player.playerDetails.name.toLowerCase().includes(search);
             })
             .map((player, i) => (
               <li
                 key={i}
                 onClick={() => {
+                  console.log(player1, player2);
                   if (!player1 && !player2) {
                     if (active1) {
                       handlePlayer1(player);
@@ -67,10 +69,11 @@ const OpenersSuggestion = ({
                   player1 && player.id === player1.id && "text-gray-500"
                 } ${player2 && player.id === player2.id && "text-gray-500"}`}
               >
-                {player.name}
+                {player.playerDetails.name}
               </li>
             ))}
-      </ul>
+        </ul>
+      )}
     </>
   );
 };

@@ -10,7 +10,6 @@ export const GET = async (req, res) => {
 
   try {
     const teams = await Team.findById(_id).populate("owner");
-    console.log(teams);
     return NextResponse.json({ status: 200, teams });
   } catch (error) {
     return NextResponse.json({ status: 404, message: "Not Found" });

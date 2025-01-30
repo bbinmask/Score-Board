@@ -1,7 +1,7 @@
 const wonMessage = (winner) => {
-  let message = "";
+  let message = null;
 
-  if (winner) {
+  if (winner.winner) {
     if (winner.runsLeft === undefined && winner.winner) {
       message = `${winner.winner} won by ${winner.wicketLeft} wickets`;
     } else if (winner.runsLeft === 0) {

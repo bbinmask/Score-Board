@@ -1,24 +1,29 @@
 import React, { useEffect, useState } from "react";
 
 const SelectBowler = ({
-  setBowler,
-  setOvers,
   setStart,
-  inning,
-  bowler,
-  overs,
-  match,
-  toggle,
-  setToggle,
+  TeamScore,
+  setBowlingPrefs,
+  bowlingPrefs,
   dispatch,
-  scoring,
-  setChangeBowler,
+  SetBowlersList,
 }) => {
+  const {
+    isWicket,
+    isBowlerChange,
+    isOverCompleted,
+    wickets,
+    currentBowler,
+    overLimit,
+    overs,
+    ballsLeft,
+  } = bowlingPrefs;
+
   const [selectedBowler, setSelectedBowler] = useState(null);
 
   const handleBowler = (event) => {
-    const i = Number(event.target.value);
-    setSelectedBowler(i);
+    const player = JSON.parse(event.target.value);
+    setSelectedBowler(player);
   };
 
   const handleSubmit = (event) => {
@@ -28,52 +33,46 @@ const SelectBowler = ({
       return;
     }
     if (selectedBowler !== null) {
-      dispatch(scoring({ i: selectedBowler, type: inning[selectedBowler] }));
-      if (overs) {
-        setBowler(overs);
-      }
-      setOvers({ id: selectedBowler, limit: match.limit });
+      dispatch(SetBowlersList({ id: selectedBowler.id }));
       setSelectedBowler(null);
     }
-    setToggle((t) => !t);
     setStart(true);
-    setChangeBowler(false);
+    setBowlingPrefs({
+      ...bowlingPrefs,
+      isBowlerChange: false,
+      currentBowler: selectedBowler,
+    });
   };
-
-  useEffect(() => {
-    if (overs) {
-      setBowler(overs);
-    }
-  }, [overs, setBowler]);
 
   return (
     <>
-      {!toggle && (
+      {isBowlerChange && (
         <div className="relative">
           <form
             className="batter-select absolute left-12 top-16 z-30 h-72 w-80 rounded-md bg-slate-50 p-2 shadow-3xl"
             onSubmit={handleSubmit}
           >
-            <h4 className="text-center">Bowler</h4>
+            <h5 className="py-2 text-center">Bowler</h5>
             <select
+              defaultValue={""}
               required
               onChange={handleBowler}
               className="form-select opt"
-              defaultValue={"disabled"}
             >
-              <option className="opt" value={"disabled"} disabled>
+              <option className="opt" value={""} selected disabled>
                 Select Bowler
               </option>
-              {inning.map((player, index) => (
-                <option
-                  className="opt"
-                  key={index}
-                  value={index}
-                  disabled={index === (overs ? bowler.id : -1)}
-                >
-                  {player.name}
-                </option>
-              ))}
+              {TeamScore.playersList.map((player, index) => {
+                return (
+                  <option
+                    className="opt"
+                    key={index}
+                    value={JSON.stringify(player)}
+                  >
+                    {player.playerDetails.name}
+                  </option>
+                );
+              })}
             </select>
             <button type="submit" className="btn btn-danger">
               Submit

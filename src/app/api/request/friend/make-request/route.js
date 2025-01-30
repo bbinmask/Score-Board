@@ -28,15 +28,7 @@ export async function POST(req) {
       (id) => id.toString() === userId.toString(),
     );
 
-    // console.log(
-    //   "alreadyRequested:",
-    //   alreadyRequested,
-    //   "alreadyFriends: ",
-    //   alreadyFriends,
-    // );
-
     if (alreadyRequested !== -1) {
-      console.log("Here");
       requestedUser.friendRequests = await requestedUser.friendRequests.filter(
         (id) => id.toString() !== userId.toString(),
       );

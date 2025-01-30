@@ -1,30 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
 
 const NewBatter = ({
-  inning,
-  strike,
   setStart,
-  nonStrike,
-  setStrike,
+  setBowlingPrefs,
+  bowlingPrefs,
+  SetBattersList,
+  battingPrefs,
+  setBattingPrefs,
+  matchDetails,
+  BattingTeamScore,
   dispatch,
-  scoring,
-  setW,
-  batting,
-  wicket,
 }) => {
   const batterRef = useRef(null);
 
-  useEffect(() => {}, [strike]);
-
   const handleTog = (event) => {
     event.preventDefault();
-    const i = Number(batterRef.current.value);
-    dispatch(scoring({ i, type: inning[i], extra: null }));
-    setStrike(i);
-    setW(false);
+    const player = JSON.parse(batterRef.current.value);
+    dispatch(SetBattersList({ id: player.id }));
+    setBattingPrefs({
+      ...battingPrefs,
+      strikeBatter: player,
+      isBatterChange: false,
+    });
+    setBowlingPrefs({ ...bowlingPrefs, isWicket: false });
     setStart(true);
   };
-
   return (
     <>
       <div className="relative">
@@ -33,17 +33,23 @@ const NewBatter = ({
           onSubmit={handleTog}
         >
           <h5 className="text-center font-semibold">New Batter</h5>
-          <select required={true} ref={batterRef} className="form-select opt">
-            {inning.map((player, i) => {
-              if (!player.out || !player.playing) {
+          <select
+            defaultValue={""}
+            required={true}
+            ref={batterRef}
+            className="form-select opt"
+          >
+            {BattingTeamScore.playersList.map((player, i) => {
+              if (!player.batting.out && !player.batting.playing) {
                 return (
                   <option
                     className="opt"
                     key={i}
-                    value={i}
-                    disabled={i === nonStrike}
+                    value={JSON.stringify(player)}
+                    defaultValue={JSON.stringify(player)}
+                    disabled={i === battingPrefs.nonStrikeBatter.id}
                   >
-                    {inning[i].name}
+                    {player.playerDetails.name}
                   </option>
                 );
               } else {

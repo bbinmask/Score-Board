@@ -1,11 +1,10 @@
 const findPos = (batter) => {
   let position = "";
-  if (batter.position == "c") {
+  if (batter?.playerDetails?.captain) {
     position = "(c)";
-  } else if (batter.position == "wk") {
+  } else if (batter?.playerDetails?.wk) {
     position = "(wk)";
   }
-
   return position;
 };
 

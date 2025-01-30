@@ -3,28 +3,85 @@ import { createSlice } from "@reduxjs/toolkit";
 export const currentMatchSlice = createSlice({
   name: "currentMatch",
   initialState: {
-    team1Score: {
+    team1: {
+      name: null,
       score: {
-        runs: 0,
         balls: 0,
-        overs: 0,
-        wicket: 0,
+        runs: 0,
+        wickets: 0,
+        extras: {
+          wide: 0,
+          b: 0,
+          lb: 0,
+          nb: 0,
+        },
+        wicketsType: [{ batter: null, bowler: null }],
       },
+      fieldingScore: {
+        runs: 0,
+        wickets: 0,
+      },
+      playersList: [
+        // {
+        //   id: null,
+        //   playerDetails: {
+        //     name: `Player 5`,
+        //     position: "All-rounder",
+        //     captain: false,
+        //     wk: false,
+        //   },
+        //   batting: {
+        //     out: false,
+        //     playing: false,
+        //     runs: 0,
+        //     dots: 0,
+        //     balls: 0,
+        //     fours: 0,
+        //     sixes: 0,
+        //   },
+        //   bowling: {
+        //     playing: false,
+        //     overs: 0,
+        //     limit: 0,
+        //     dots: 0,
+        //     balls: 0,
+        //     maidens: 0,
+        //     runs: 0,
+        //     wickets: 0,
+        //   },
+        //   fielding: {
+        //     runOut: [{ name: null, id: null }],
+        //     catchOut: [{ name: null, id: null }],
+        //   },
+        // },
+      ],
       batting: [],
       bowling: [],
+      fielding: [],
     },
-    team2Score: {
+    team2: {
+      name: null,
       score: {
-        runs: 0,
         balls: 0,
-        overs: 0,
-        wicket: 0,
+        runs: 0,
+        wickets: 0,
+        extras: {
+          wide: 0,
+          b: 0,
+          lb: 0,
+          nb: 0,
+        },
+        wicketsType: [{ batter: null, bowler: null }],
       },
+      fieldingScore: {
+        runs: null,
+        wickets: null,
+      },
+      playersList: [],
       batting: [],
       bowling: [],
+      fielding: [],
     },
-    inning1: [],
-    inning2: [],
     match: {
       overs: null,
       players: null,
@@ -34,9 +91,10 @@ export const currentMatchSlice = createSlice({
       teams: { team1: null, team2: null },
       batting: null,
     },
+    scoreNode: {},
   },
   reducers: {
-    matching: (state, action) => {
+    SetMatch: (state, action) => {
       const { overs, players, limit, customPlayer, isSeries, teams, batting } =
         action.payload;
       state.match.batting = batting;
@@ -46,330 +104,359 @@ export const currentMatchSlice = createSlice({
       state.match.players = players;
       state.match.overs = overs;
       state.match.teams = teams;
+      state.team1.name = teams.team1;
+      state.team2.name = teams.team2;
     },
-    team1Scoring: (state, action) => {
-      const { i, type, extra } = action.payload;
-      const player = state.inning1.find((player) => player.id === i);
-      const played = state.team1Score.batting.find((p) => p.id === i);
-      if (extra == null) {
-        const updatedType = { ...type, status: true, playing: true };
-        if (played) {
-          return;
+    SetTeam1Score: (state, action) => {
+      const { data, extra, runs } = action.payload;
+      if (data == "batting") {
+        if (extra == "w") {
+          state.team1.score.wickets++;
+        } else if (extra == ("wd" || "nb")) {
+          state.team1.score.runs += 1;
         }
-        if (!player) {
-          state.team1Score.batting.push(updatedType);
-          state.team1Score.batting.sort((a, b) => a.status - b.status);
-          return;
-        } else {
-          if (player) {
-            player.status = true;
-            player.playing = true;
-          }
-
-          state.team1Score.batting.push(updatedType);
-          state.team1Score.batting.sort((a, b) => a.status - b.status);
+        state.team1.score.runs += runs;
+      } else if (data == "bowling") {
+        if (extra == "w") {
+          state.team1.fieldingScore.wickets++;
         }
-      } else if (extra) {
-        if (player) {
-          player.status = false;
-          player.playing = false;
-        }
+        state.team1.fieldingScore.runs += runs;
       }
     },
-    team2Scoring: (state, action) => {
-      const { i, type, extra } = action.payload;
-      const player = state.inning2.find((player) => player.id === i);
-      const played = state.team2Score.batting.find((p) => p.id === i);
-      if (extra == null) {
-        const updatedType = { ...type, status: true, playing: true };
-        if (played) {
-          return;
+    SetTeam2Score: (state, action) => {
+      const { data, extra, runs } = action.payload;
+      if (data == "batting") {
+        if (extra == "w") {
+          state.team2.score.wickets++;
+        } else if (extra == ("wd" || "nb")) {
+          state.team2.score.runs += 1;
         }
-        if (player) {
-          player.playing = true;
-          player.status = true;
+        state.team2.score.runs += runs;
+      } else if (data == "bowling") {
+        if (extra == "w") {
+          state.team2.fieldingScore.wickets++;
         }
-        state.team2Score.batting.push(updatedType);
-        state.team2Score.batting.sort((a, b) => a.status - b.status);
-      } else if (extra) {
-        if (player) {
-          player.playing = false;
-          player.status = false;
-        }
+        state.team2.fieldingScore.runs += runs;
       }
     },
 
-    team1Bowling: (state, action) => {
-      const { i, type } = action.payload;
-      const bowler = state.team1Score.bowling.find((bowler) => bowler.id === i);
-      const player = state.inning1.find((player) => player.id === i);
-      if (bowler) {
-        state.team1Score.bowling.forEach((b) => {
-          if (b.id == bowler.id) {
-            b.bowling = true;
-          } else {
-            b.bowling = false;
-          }
-        });
-        state.inning1.forEach((b) => {
-          if (b.id == player.id) {
-            b.bowling = true;
-          } else {
-            b.bowling = false;
-          }
-        });
-      } else {
-        const newBowler = { ...type, bowling: true };
-        state.team1Score.bowling.forEach((bowler) => {
-          bowler.bowling = false;
-        });
-        state.inning1.forEach((player) => {
-          player.bowling = false;
-        });
-        if (player) player.bowling = true;
-        state.team1Score.bowling.push(newBowler);
-      }
-      state.team1Score.bowling.sort((a, b) => b.bowling - a.bowling);
-    },
-
-    team2Bowling: (state, action) => {
-      const { i, type } = action.payload;
-      const bowler = state.team2Score.bowling.find((bowler) => bowler.id === i);
-      const player = state.inning2.find((player) => player.id === i);
-
-      if (bowler) {
-        state.team2Score.bowling.forEach((b) => {
-          if (b == bowler) {
-            b.bowling = true;
-          } else {
-            b.bowling = false;
-          }
-        });
-        state.inning2.forEach((b) => {
-          if (b.id == player.id) {
-            b.bowling = true;
-          } else {
-            b.bowling = false;
-          }
-        });
-      } else {
-        const newBowler = { ...type, bowling: true };
-        state.team2Score.bowling.forEach((bowler) => {
-          bowler.bowling = false;
-        });
-        state.inning2.forEach((player) => {
-          player.bowling = false;
-        });
-        if (player) player.bowling = true;
-
-        state.team2Score.bowling.push(newBowler);
-      }
-      state.team2Score.bowling.sort((a, b) => b.bowling - a.bowling);
-    },
-
-    team1Bowlers: (state, action) => {
-      const { runs, extra, id } = action.payload;
-      const bowler = state.team1Score.bowling.find((b) => b.id === id);
-      const player = state.inning1.find((player) => player.id === id);
-      if (bowler) {
-        if (extra === "b" || extra === "lb") {
-          bowler.overs.balls += 1;
-          bowler.overs.dot += 1;
-        } else if (extra == "wd") {
-          bowler.overs.balls += 0;
-          bowler.overs.runs += 1;
-        } else if (extra == "nb") {
-          bowler.overs.runs += runs + 1;
-        } else if (extra == "w") {
-          bowler.overs.balls += 1;
-          bowler.overs.wicket += 1;
-          runs == 0 ? (bowler.overs.dot += 1) : (bowler.overs.runs += runs);
-        } else {
-          if (runs == 0) {
-            bowler.overs.dot += 1;
-            bowler.overs.balls += 1;
-          } else {
-            bowler.overs.runs += runs;
-            bowler.overs.balls += 1;
-          }
-        }
-
-        if (bowler.overs.balls === 6) {
-          bowler.overs.over += 1;
-          bowler.overs.limit -= 1;
-          player.overs.limit -= 1;
-          bowler.overs.balls = 0;
-          if (bowler.overs.dot === 6) {
-            bowler.overs.maiden += 1;
-          }
-          bowler.overs.dot = 0;
-        }
-      }
-    },
-
-    team2Bowlers: (state, action) => {
-      const { runs, extra, id } = action.payload;
-
-      const bowler = state.team2Score.bowling.find((b) => b.id === id);
-      const b = state.team2Score.bowling.findIndex((b) => b.id === id);
-      const player = state.inning2.find((player) => player.id === id);
-      if (bowler) {
-        if (extra === "b" || extra === "lb") {
-          bowler.overs.balls += 1;
-          bowler.overs.dot += 1;
-        } else if (extra == "wd") {
-          bowler.overs.balls += 0;
-          bowler.overs.runs += 1;
-        } else if (extra == "nb") {
-          bowler.overs.runs += runs + 1;
-        } else if (extra == "w") {
-          bowler.overs.balls += 1;
-          bowler.overs.wicket += 1;
-          // runs == 0 ? (bowler.overs.dot += 1) : (bowler.overs.runs += runs);
-        } else {
-          if (runs == 0) {
-            bowler.overs.dot += 1;
-            bowler.overs.balls += 1;
-          } else {
-            bowler.overs.runs += runs;
-            bowler.overs.balls += 1;
-          }
-        }
-
-        if (bowler.overs.balls === 6) {
-          bowler.overs.over += 1;
-          bowler.overs.limit -= 1;
-          player.overs.limit -= 1;
-          bowler.overs.balls = 0;
-          if (bowler.overs.dot === 6) {
-            bowler.overs.maiden += 1;
-          }
-          bowler.overs.dot = 0;
-        }
-      }
-    },
-
-    team1Runs: (state, action) => {
-      const { runs, id, extra } = action.payload;
-      const player = state.team1Score.batting.find(
-        (player) => player.id === id,
+    SetTeam1BowlersList: (state, action) => {
+      const { id } = action.payload;
+      const alreadyAddedBowler = state.team1.bowling.find(
+        (bowler) => bowler.id === id,
       );
+
+      if (alreadyAddedBowler) {
+        state.team1.bowling.forEach(
+          (bowler) => (bowler.bowling.playing = bowler.id === id),
+        );
+      } else {
+        const bowler = state.team1.playersList.find(
+          (player) => player.id === id,
+        );
+
+        if (bowler) {
+          // Add a new bowler with updated playing status
+          const newBowler = {
+            ...bowler,
+            bowling: {
+              ...bowler.bowling,
+              playing: true,
+            },
+          };
+
+          // Set playing to false for all current bowlers
+          state.team1.bowling.forEach((bowler) => {
+            bowler.bowling.playing = false;
+          });
+
+          // Add the new bowler to the bowling list
+          state.team1.bowling.push(newBowler);
+        }
+      }
+      state.team1.bowling.sort((a, b) => b.bowling.playing - a.bowling.playing);
+    },
+    SetTeam2BowlersList: (state, action) => {
+      const { id } = action.payload;
+      const alreadyAddedBowler = state.team2.bowling.find(
+        (bowler) => bowler.id === id,
+      );
+
+      if (alreadyAddedBowler) {
+        state.team2.bowling.forEach((bowler) => {
+          bowler.bowling.playing = bowler.id === id;
+        });
+      } else {
+        const bowler = state.team2.playersList.find(
+          (player) => player.id === id,
+        );
+
+        if (bowler) {
+          // Add a new bowler with updated playing status
+          const newBowler = {
+            ...bowler,
+            bowling: {
+              ...bowler.bowling,
+              playing: true,
+            },
+          };
+
+          // Set playing to false for all current bowlers
+          state.team2.bowling.forEach((bowler) => {
+            bowler.bowling.playing = false;
+          });
+
+          // Add the new bowler to the bowling list
+          state.team2.bowling.push(newBowler);
+        }
+      }
+      state.team2.bowling.sort((a, b) => b.bowling.playing - a.bowling.playing);
+    },
+
+    SetTeam1BowlerScore: (state, action) => {
+      const { runs, extra, id } = action.payload;
+      const bowler = state.team1.bowling.find((bowler) => bowler.id === id);
+      // const player = state.inning1.find((player) => player.id === id);
+      if (bowler) {
+        if (extra === "b" || extra === "lb") {
+          bowler.bowling.balls += 1;
+          bowler.bowling.dotss += 1;
+        } else if (extra == "wd") {
+          bowler.bowling.balls += 0;
+          bowler.bowling.runs += 1;
+        } else if (extra == "nb") {
+          bowler.bowling.runs += runs + 1;
+        } else if (extra == "w") {
+          bowler.bowling.balls += 1;
+          bowler.bowling.wickets += 1;
+          runs == 0
+            ? (bowler.bowling.dots += 1)
+            : (bowler.bowling.runs += runs);
+        } else {
+          if (runs == 0) {
+            bowler.bowling.dots += 1;
+            bowler.bowling.balls += 1;
+          } else {
+            bowler.bowling.runs += runs;
+            bowler.bowling.balls += 1;
+          }
+        }
+
+        if (bowler.bowling.balls === 6) {
+          const currentBowler = state.team1.playersList.find(
+            (bowler) => bowler.id == id,
+          );
+          if (currentBowler) {
+            currentBowler.bowling.limit += 1;
+          }
+          bowler.bowling.overs += 1;
+          bowler.bowling.balls = 0;
+          bowler.bowling.limit += 1;
+          if (bowler.bowling.dots === 6) {
+            bowler.bowling.maidens += 1;
+          }
+          bowler.bowling.dots = 0;
+        }
+      }
+    },
+
+    SetTeam2BowlerScore: (state, action) => {
+      const { runs, extra, id } = action.payload;
+
+      const bowler = state.team2.bowling.find((bowler) => bowler.id === id);
+      if (bowler) {
+        if (extra === "b" || extra === "lb") {
+          bowler.bowling.balls += 1;
+          bowler.bowling.dots += 1;
+        } else if (extra == "wd") {
+          bowler.bowling.balls += 0;
+          bowler.bowling.runs += 1;
+        } else if (extra == "nb") {
+          bowler.bowling.runs += runs + 1;
+        } else if (extra == "w") {
+          bowler.bowling.balls += 1;
+          bowler.bowling.wicket += 1;
+          runs == 0
+            ? (bowler.bowling.dots += 1)
+            : (bowler.bowling.runs += runs);
+        } else {
+          if (runs == 0) {
+            bowler.bowling.dots += 1;
+            bowler.bowling.balls += 1;
+          } else {
+            bowler.bowling.runs += runs;
+            bowler.bowling.balls += 1;
+          }
+        }
+
+        if (bowler.bowling.balls === 6) {
+          const currentBowler = state.team2.playersList.find(
+            (player) => player.id === id, // Correct the search scope
+          );
+
+          if (currentBowler) {
+            currentBowler.bowling.limit += 1; // Safely update the limit
+          }
+
+          // Update bowler stats
+          bowler.bowling.overs += 1;
+          bowler.bowling.limit += 1; // Only update team2's bowler limit here
+          bowler.bowling.balls = 0;
+
+          if (bowler.bowling.dots === 6) {
+            bowler.bowling.maidens += 1;
+          }
+
+          bowler.bowling.dots = 0; // Reset dots after updating maidens
+        }
+      }
+    },
+
+    SetTeam1BatterScore: (state, action) => {
+      const { runs, id, extra } = action.payload;
+      const player = state.team1.batting.find((player) => player.id === id);
 
       if (player) {
         if (extra == "b" || extra == "lb") {
-          state.team1Score.score.runs += runs;
-          state.team1Score.score.balls += 1;
-          player.balls += 1;
+          state.team1.score.runs += runs;
+          state.team1.score.balls += 1;
+          player.batting.balls += 1;
         } else if (extra == "wd") {
-          state.team1Score.score.runs += 1;
+          state.team1.score.runs += 1;
         } else if (extra == "nb") {
-          state.team1Score.score.runs += 1 + runs;
-          player.runs += runs;
-          player.balls += 1;
+          state.team1.score.runs += 1 + runs;
+          player.batting.runs += runs;
+          player.batting.balls += 1;
         } else if (extra == "w") {
-          state.team1Score.score.wicket += 1;
-          state.team1Score.score.runs += runs;
-          player.runs += runs;
-          player.balls += 1;
-          state.team1Score.score.balls += 1;
-          player.status = false;
-          player.playing = false;
-          player.out = true;
+          const batter = state.team1.playersList.find(
+            (batter) => batter.id === id,
+          );
+          batter.batting.playing = false;
+          batter.batting.out = true;
+          batter.batting.outBy = "";
+          state.team1.score.wickets += 1;
+          state.team1.score.runs += runs;
+          state.team1.score.balls += 1;
+          player.batting.runs += runs;
+          player.batting.balls += 1;
+          player.batting.playing = false;
+          player.batting.out = true;
         } else {
-          state.team1Score.score.runs += runs;
-          state.team1Score.score.balls += 1;
-          player.runs += runs;
-          player.balls += 1;
+          state.team1.score.runs += runs;
+          state.team1.score.balls += 1;
+          player.batting.runs += runs;
+          player.batting.balls += 1;
         }
         if (runs === 6) {
-          player.sixes += 1;
+          player.batting.sixes += 1;
         } else if (runs === 4) {
-          player.fours += 1;
+          player.batting.fours += 1;
         }
-      }
-      if (state.team1Score.score.balls % 6 == 0) {
-        state.team1Score.score.overs += 1;
       }
     },
 
-    team2Runs: (state, action) => {
+    SetTeam2BatterScore: (state, action) => {
       const { runs, id, extra } = action.payload;
-      const player = state.team2Score.batting.find(
-        (player) => player.id === id,
-      );
+      const player = state.team2.batting.find((player) => player.id === id);
 
       if (player) {
         if (extra == "b" || extra == "lb") {
-          state.team2Score.score.runs += runs;
-          state.team2Score.score.balls += 1;
-          player.balls += 1;
+          state.team2.score.runs += runs;
+          state.team2.score.balls += 1;
+          player.batting.balls += 1;
         } else if (extra == "wd") {
-          state.team2Score.score.runs += 1;
+          state.team2.score.runs += 1;
         } else if (extra == "nb") {
-          state.team2Score.score.runs += 1 + runs;
-          player.runs += runs;
-          player.balls += 1;
+          state.team2.score.runs += 1 + runs;
+          player.batting.runs += runs;
+          player.batting.balls += 1;
         } else if (extra == "w") {
-          state.team2Score.score.wicket += 1;
-          state.team2Score.score.runs += runs;
-          player.runs += runs;
-          player.balls += 1;
-          state.team2Score.score.balls += 1;
-          player.status = false;
-          player.playing = false;
-          player.out = true;
+          const batter = state.team2.playersList.forEach((batter) => {
+            if (batter.id === id) {
+              batter.batting.playing = false;
+              batter.batting.out = true;
+              batter.batting.outBy = "";
+            }
+          });
+
+          state.team2.score.wickets += 1;
+          state.team2.score.runs += runs;
+          state.team2.score.balls += 1;
+
+          player.batting.runs += runs;
+          player.batting.balls += 1;
+          player.batting.playing = false;
+          player.batting.out = true;
         } else {
-          state.team2Score.score.runs += runs;
-          state.team2Score.score.balls += 1;
-          player.runs += runs;
-          player.balls += 1;
+          state.team2.score.runs += runs;
+          state.team2.score.balls += 1;
+          player.batting.runs += runs;
+          player.batting.balls += 1;
         }
         if (runs === 6) {
-          player.sixes += 1;
+          player.batting.sixes += 1;
         } else if (runs === 4) {
-          player.fours += 1;
+          player.batting.fours += 1;
         }
       }
-      if (state.team2Score.score.balls % 6 == 0) {
-        state.team2Score.score.overs += 1;
-      }
     },
+    SetTeam1BattersList: (state, action) => {
+      const { id } = action.payload;
+      const alreadyAddedBatter = state.team1.batting.find(
+        (batter) => batter.id == id,
+      );
+      if (alreadyAddedBatter) {
+        return;
+      }
+      const batter = state.team1.playersList.find((batter) => batter.id == id);
+      batter.batting.playing = true;
+      state.team1.batting.push(batter);
+    },
+    SetTeam2BattersList: (state, action) => {
+      const { id } = action.payload;
 
-    setInning1: (state, action) => {
-      const { type, id } = action.payload;
-
-      if (id) {
-        state.inning1 = type;
+      const alreadyAddedBatter = state.team2.batting.find(
+        (batter) => batter.id == id,
+      );
+      if (alreadyAddedBatter) return;
+      const batter = state.team2.playersList.find((batter) => batter.id === id);
+      batter.batting.playing = true;
+      state.team2.batting.push(batter);
+    },
+    SetInning1: (state, action) => {
+      const { data, customPlayer } = action.payload;
+      if (customPlayer) {
+        state.team1.playersList = data;
       } else {
-        state.inning1.push(type);
+        state.team1.playersList.push(data);
       }
     },
+    SetInning2: (state, action) => {
+      const { data, customPlayer } = action.payload;
 
-    setInning2: (state, action) => {
-      const { type, id } = action.payload;
-      if (id) {
-        state.inning2 = type;
+      if (customPlayer) {
+        state.team2.playersList = data;
       } else {
-        state.inning2.push(type);
+        state.team2.playersList.push(data);
       }
     },
-
-    setBatter: (state, action) => {},
   },
 });
 
 export const {
-  matching,
-  team1Scoring,
-  team2Scoring,
-  team1Bowling,
-  team2Bowling,
-  setInning1,
-  setInning2,
-  team1Runs,
-  team2Runs,
-  team1Bowlers,
-  team2Bowlers,
+  SetMatch,
+  SetTeam1Score,
+  SetTeam2Score,
+  SetTeam1BowlersList,
+  SetTeam2BowlersList,
+  SetTeam1BattersList,
+  SetTeam2BattersList,
+  SetInning1,
+  SetInning2,
+  SetTeam1BatterScore,
+  SetTeam2BatterScore,
+  SetTeam1BowlerScore,
+  SetTeam2BowlerScore,
 } = currentMatchSlice.actions;
 
 export default currentMatchSlice.reducer;

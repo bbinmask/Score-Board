@@ -15,7 +15,6 @@ export const POST = async (req, res) => {
     if (!name || !players || !userId) {
       return NextResponse.json({ status: 404, message: "Bad request" });
     }
-    console.log(name, players);
     const team = await Team.create({
       name: name,
       owner: userId,
@@ -24,11 +23,8 @@ export const POST = async (req, res) => {
 
     const createdTeam = await Team.findById(team?._id);
 
-    console.log(createdTeam);
-
     return NextResponse.json({ status: 200, message: "OK" });
   } catch (error) {
-    console.log(error);
     return NextResponse.json({
       status: 500,
       message: error.message,

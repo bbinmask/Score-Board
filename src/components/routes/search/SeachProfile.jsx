@@ -65,7 +65,6 @@ const SearchProfile = ({ id }) => {
         if (selfSearch) {
           router.push("/profile");
         }
-        console.log(user);
         setUserInfo(user);
 
         const response2 = await axios.get("/api/request/status", {
