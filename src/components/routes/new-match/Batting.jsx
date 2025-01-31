@@ -56,15 +56,6 @@ const Batting = ({
   const [recentBalls, setRecentBalls] = useState([]);
   const [extra, setExtra] = useState(null);
 
-  const [state, setState] = useState({
-    bowlingPrefs,
-    battingPrefs,
-    isStarted,
-    recentBalls,
-    BattingTeamScore,
-    BowlingTeamScore,
-  });
-
   const handleShot = (event) => {
     const runs = Number(event.target.value);
 
@@ -153,17 +144,6 @@ const Batting = ({
       }
     }
     setExtra(null);
-    setState({
-      bowlingPrefs,
-      battingPrefs,
-      isStarted,
-      recentBalls,
-      BattingTeamScore,
-      BowlingTeamScore,
-    });
-
-    // console.log(scoringList.showList());
-    // console.log(scoringList.prevList());
   };
 
   const handleExtra = (event) => {
@@ -180,8 +160,6 @@ const Batting = ({
   // Function to undo last action
   const handleUndo = () => {
     const prevScore = scoringList.undo();
-    console.log(prevScore);
-
     if (!prevScore) return;
     const {
       bowlingPrefs,
@@ -197,40 +175,11 @@ const Batting = ({
     setRecentBalls(recentBalls);
     dispatch(SetBattingTeamNode(BattingTeamScore));
     dispatch(SetBowlingTeamNode(BowlingTeamScore));
-    setState(prevScore);
-    //console.log(scoringList.showList());
   };
 
   // Function to redo last undone action
-  const handleRedo = () => {
-    const nextScore = scoringList.redo();
-    if (!nextScore) return;
-    const {
-      bowlingPrefs,
-      battingPrefs,
-      isStarted,
-      recentBalls,
-      BattingTeamScore,
-      BowlingTeamScore,
-    } = nextScore;
-    setBattingPrefs(battingPrefs);
-    setBowlingPrefs(bowlingPrefs);
-    setIsStarted(isStarted);
-    setRecentBalls(recentBalls);
-    dispatch(SetBattingTeamNode(BattingTeamScore));
-    dispatch(SetBowlingTeamNode(BowlingTeamScore));
-    setState(nextScore);
-  };
 
   useEffect(() => {
-    setState({
-      battingPrefs,
-      bowlingPrefs,
-      isStarted,
-      recentBalls,
-      BattingTeamScore,
-      BowlingTeamScore,
-    });
     scoringList.addState({
       battingPrefs,
       bowlingPrefs,
@@ -291,7 +240,6 @@ const Batting = ({
         !battingPrefs.isBatterChange ? (
           <ScoreBoard
             handleUndo={handleUndo}
-            handleRedo={handleRedo}
             handleStrikeChange={handleStrikeChange}
             handleShot={handleShot}
             recentBalls={recentBalls}
@@ -369,7 +317,6 @@ const Batting = ({
         !battingPrefs.isBatterChange ? (
         <ScoreBoard
           handleUndo={handleUndo}
-          handleRedo={handleRedo}
           handleStrikeChange={handleStrikeChange}
           handleShot={handleShot}
           recentBalls={recentBalls}

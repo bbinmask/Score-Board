@@ -1,23 +1,14 @@
 import UndoButton from "@/components/Random/UndoButton";
 import React from "react";
 
-const Shot = ({
-  handleExtra,
-  handleShot,
-  handleStrikeChange,
-  handleUndo,
-  handleRedo,
-}) => {
+const Shot = ({ handleExtra, handleShot, handleStrikeChange, handleUndo }) => {
   return (
     <>
       <div className="flex">
         <button className="btn btn-danger m-2" onClick={handleStrikeChange}>
           change strike
         </button>
-        <UndoButton
-          handleUndo={handleUndo}
-          handleRedo={handleRedo}
-        ></UndoButton>
+        <UndoButton handleUndo={handleUndo}></UndoButton>
       </div>
       <div className="shot-opt my-4 flex w-full flex-col justify-start gap-4 rounded-md bg-red-800 p-2 shadow-md shadow-black md:w-xl">
         <div className="extras flex w-full justify-evenly">

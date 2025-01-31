@@ -8,7 +8,6 @@ const ScoreBoard = ({
   BowlingTeamScore,
   team1,
   handleUndo,
-  handleRedo,
   team2,
   handleExtra,
   recentBalls,
@@ -45,7 +44,6 @@ const ScoreBoard = ({
         </div>
         <Shot
           handleUndo={handleUndo}
-          handleRedo={handleRedo}
           handleExtra={handleExtra}
           handleShot={handleShot}
           handleStrikeChange={handleStrikeChange}
