@@ -440,11 +440,20 @@ export const currentMatchSlice = createSlice({
         state.team2.playersList.push(data);
       }
     },
+
+    SetTeam1Node: (state, action) => {
+      state.team1 = action.payload;
+    },
+    SetTeam2Node: (state, action) => {
+      state.team2 = action.payload;
+    },
   },
 });
 
 export const {
   SetMatch,
+  SetTeam1Node,
+  SetTeam2Node,
   SetTeam1Score,
   SetTeam2Score,
   SetTeam1BowlersList,

@@ -9,10 +9,13 @@ import TypeBowler from "./type-ots/TypeBowler";
 import TypeOpeners from "./type-ots/TypeOpeners";
 import TypeNewBatter from "./type-ots/TypeNewBatter";
 import TypeNewBowler from "./type-ots/TypeNewBowler";
+import ScoreListHook from "../../../hooks/ScoreListHook.jsx";
 import { useAppDispatch } from "@/store/hooks.js";
 const Batting = ({
   team1,
   team2,
+  SetBattingTeamNode,
+  SetBowlingTeamNode,
   SetBattingPlayers,
   SetBowlingPlayers,
   BattingTeamScore,
@@ -30,6 +33,9 @@ const Batting = ({
   setMatchPrefs,
   matchPrefs,
 }) => {
+  const dispatch = useAppDispatch();
+  const [scoringList] = useState(new ScoreListHook());
+
   const [bowlingPrefs, setBowlingPrefs] = useState({
     isWicket: false,
     isBowlerChange: true,
@@ -49,16 +55,23 @@ const Batting = ({
   const [isStarted, setIsStarted] = useState(false);
   const [recentBalls, setRecentBalls] = useState([]);
   const [extra, setExtra] = useState(null);
-  const [toggleBatter, setToggleBatter] = useState(false);
-  const dispatch = useAppDispatch();
+
+  const [state, setState] = useState({
+    bowlingPrefs,
+    battingPrefs,
+    isStarted,
+    recentBalls,
+    BattingTeamScore,
+    BowlingTeamScore,
+  });
 
   const handleShot = (event) => {
     const runs = Number(event.target.value);
 
     // Setting recentBalls
 
-    const recentBalls = !extra ? runs : runs === 0 ? extra : runs + extra;
-    setRecentBalls((prevState) => [recentBalls, ...prevState]);
+    const prevBalls = !extra ? runs : runs === 0 ? extra : runs + extra;
+    setRecentBalls([...recentBalls, prevBalls]);
 
     // dispatching actions
 
@@ -76,7 +89,7 @@ const Batting = ({
         ballsLeft: bowlingPrefs.ballsLeft - 1,
       });
     } else if (bowlingPrefs.ballsLeft === 0) {
-      setRecentBalls((prevState) => ["|", ...prevState]);
+      setRecentBalls([...recentBalls, "|"]);
       setIsStarted(false);
       setBowlingPrefs({
         ...bowlingPrefs,
@@ -140,6 +153,17 @@ const Batting = ({
       }
     }
     setExtra(null);
+    setState({
+      bowlingPrefs,
+      battingPrefs,
+      isStarted,
+      recentBalls,
+      BattingTeamScore,
+      BowlingTeamScore,
+    });
+
+    // console.log(scoringList.showList());
+    // console.log(scoringList.prevList());
   };
 
   const handleExtra = (event) => {
@@ -152,7 +176,69 @@ const Batting = ({
       nonStrikeBatter: battingPrefs.strikeBatter,
     });
   };
+
+  // Function to undo last action
+  const handleUndo = () => {
+    const prevScore = scoringList.undo();
+    console.log(prevScore);
+
+    if (!prevScore) return;
+    const {
+      bowlingPrefs,
+      battingPrefs,
+      isStarted,
+      recentBalls,
+      BattingTeamScore,
+      BowlingTeamScore,
+    } = prevScore;
+    setBattingPrefs(battingPrefs);
+    setBowlingPrefs(bowlingPrefs);
+    setIsStarted(isStarted);
+    setRecentBalls(recentBalls);
+    dispatch(SetBattingTeamNode(BattingTeamScore));
+    dispatch(SetBowlingTeamNode(BowlingTeamScore));
+    setState(prevScore);
+    //console.log(scoringList.showList());
+  };
+
+  // Function to redo last undone action
+  const handleRedo = () => {
+    const nextScore = scoringList.redo();
+    if (!nextScore) return;
+    const {
+      bowlingPrefs,
+      battingPrefs,
+      isStarted,
+      recentBalls,
+      BattingTeamScore,
+      BowlingTeamScore,
+    } = nextScore;
+    setBattingPrefs(battingPrefs);
+    setBowlingPrefs(bowlingPrefs);
+    setIsStarted(isStarted);
+    setRecentBalls(recentBalls);
+    dispatch(SetBattingTeamNode(BattingTeamScore));
+    dispatch(SetBowlingTeamNode(BowlingTeamScore));
+    setState(nextScore);
+  };
+
   useEffect(() => {
+    setState({
+      battingPrefs,
+      bowlingPrefs,
+      isStarted,
+      recentBalls,
+      BattingTeamScore,
+      BowlingTeamScore,
+    });
+    scoringList.addState({
+      battingPrefs,
+      bowlingPrefs,
+      isStarted,
+      recentBalls,
+      BattingTeamScore,
+      BowlingTeamScore,
+    });
     if (matchPrefs.inn1Started && !matchPrefs.inn1Completed) {
       if (
         matchDetails.overs == bowlingPrefs.overs ||
@@ -191,7 +277,6 @@ const Batting = ({
     });
     setRecentBalls([]);
     setExtra(null);
-    setToggleBatter(false);
   }, [
     bowlingPrefs.ballsLeft,
     bowlingPrefs.isBowlerChange,
@@ -205,6 +290,8 @@ const Batting = ({
         !bowlingPrefs.isBowlerChange &&
         !battingPrefs.isBatterChange ? (
           <ScoreBoard
+            handleUndo={handleUndo}
+            handleRedo={handleRedo}
             handleStrikeChange={handleStrikeChange}
             handleShot={handleShot}
             recentBalls={recentBalls}
@@ -218,25 +305,23 @@ const Batting = ({
             BattingTeamScore={BattingTeamScore}
             BowlingTeamScore={BowlingTeamScore}
           />
-        ) : bowlingPrefs.isBowlerChange &&
-          !bowlingPrefs.isOverCompleted &&
-          !bowlingPrefs.isWicket ? (
+        ) : bowlingPrefs.isBowlerChange && !bowlingPrefs.currentBowler ? (
           <div className="select-div">
-            <SelectBatter
-              SetBattersList={SetBattersList}
-              matchDetails={matchDetails}
-              setStart={setIsStarted}
-              SetTeamScore={SetTeam1Score}
-              TeamScore={BattingTeamScore}
-              SetBatterScore={SetBatterScore}
-              dispatch={dispatch}
-              toggle={toggleBatter}
-              setToggle={setToggleBatter}
-              battingPrefs={battingPrefs}
-              setBowlingPrefs={setBowlingPrefs}
-              bowlingPrefs={bowlingPrefs}
-              setBattingPrefs={setBattingPrefs}
-            />
+            {battingPrefs.isBatterChange && (
+              <SelectBatter
+                SetBattersList={SetBattersList}
+                matchDetails={matchDetails}
+                setStart={setIsStarted}
+                SetTeamScore={SetTeam1Score}
+                TeamScore={BattingTeamScore}
+                SetBatterScore={SetBatterScore}
+                dispatch={dispatch}
+                battingPrefs={battingPrefs}
+                setBowlingPrefs={setBowlingPrefs}
+                bowlingPrefs={bowlingPrefs}
+                setBattingPrefs={setBattingPrefs}
+              />
+            )}
             {bowlingPrefs.isBowlerChange && !bowlingPrefs.isOverCompleted && (
               <SelectBowler
                 setStart={setIsStarted}
@@ -266,7 +351,7 @@ const Batting = ({
                 />
               </div>
             )}
-            {bowlingPrefs.isBowlerChange && bowlingPrefs.currentBowler && (
+            {bowlingPrefs.isBowlerChange && !battingPrefs.isBatterChange && (
               <NewBowler
                 Team={BowlingTeamScore}
                 bowlingPrefs={bowlingPrefs}
@@ -283,6 +368,8 @@ const Batting = ({
         !bowlingPrefs.isBowlerChange &&
         !battingPrefs.isBatterChange ? (
         <ScoreBoard
+          handleUndo={handleUndo}
+          handleRedo={handleRedo}
           handleStrikeChange={handleStrikeChange}
           handleShot={handleShot}
           recentBalls={recentBalls}
@@ -296,27 +383,24 @@ const Batting = ({
           BattingTeamScore={BattingTeamScore}
           BowlingTeamScore={BowlingTeamScore}
         />
-      ) : bowlingPrefs.isBowlerChange &&
-        !bowlingPrefs.isOverCompleted &&
-        !bowlingPrefs.isWicket ? (
+      ) : bowlingPrefs.isBowlerChange && !bowlingPrefs.isWicket ? (
         <div className="select-div">
-          <TypeOpeners
-            SetBattingPlayers={SetBattingPlayers}
-            SetBattersList={SetBattersList}
-            setCap={setCapTeam1}
-            isCap={capTeam1}
-            matchDetails={matchDetails}
-            SetTeam1Score={SetTeam1Score}
-            BattingTeamScore={BattingTeamScore}
-            dispatch={dispatch}
-            toggle={toggleBatter}
-            setToggle={setToggleBatter}
-            battingPrefs={battingPrefs}
-            setBowlingPrefs={setBowlingPrefs}
-            bowlingPrefs={bowlingPrefs}
-            setBattingPrefs={setBattingPrefs}
-          />
-          {/* )} */}
+          {battingPrefs.isBatterChange && (
+            <TypeOpeners
+              SetBattingPlayers={SetBattingPlayers}
+              SetBattersList={SetBattersList}
+              setCap={setCapTeam1}
+              isCap={capTeam1}
+              matchDetails={matchDetails}
+              SetTeam1Score={SetTeam1Score}
+              BattingTeamScore={BattingTeamScore}
+              dispatch={dispatch}
+              battingPrefs={battingPrefs}
+              setBowlingPrefs={setBowlingPrefs}
+              bowlingPrefs={bowlingPrefs}
+              setBattingPrefs={setBattingPrefs}
+            />
+          )}
 
           {bowlingPrefs.isBowlerChange &&
             !bowlingPrefs.isOverCompleted &&

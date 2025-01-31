@@ -53,7 +53,6 @@ const NewBowler = ({
                 Select Bowler
               </option>
               {Team.playersList.map((player, index) => {
-                console.log(player);
                 if (
                   index === bowlingPrefs.currentBowler.id ||
                   player.bowling.limit === matchDetails.limit

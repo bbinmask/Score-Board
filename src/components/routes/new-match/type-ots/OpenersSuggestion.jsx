@@ -12,7 +12,6 @@ const OpenersSuggestion = ({
   setActive1,
   setActive2,
 }) => {
-  // console.log(BattingTeamScore);
   return (
     <>
       {BattingTeamScore.playersList.length !== 0 && (
@@ -30,7 +29,6 @@ const OpenersSuggestion = ({
               <li
                 key={i}
                 onClick={() => {
-                  console.log(player1, player2);
                   if (!player1 && !player2) {
                     if (active1) {
                       handlePlayer1(player);

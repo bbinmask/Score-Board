@@ -247,7 +247,7 @@ const CustomPlayers = ({
     // }
 
     dispatch(setTeam({ name: teamName, team }));
-    dispatch(setInning({ data: team, customized: true }));
+    dispatch(setInning({ data: team, customPlayer: true }));
     setToggle(true);
   };
   const handleCaptain = (index) => {

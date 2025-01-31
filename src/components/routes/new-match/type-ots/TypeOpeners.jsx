@@ -8,7 +8,6 @@ const TypeOpeners = ({
   setBowlingPrefs,
   bowlingPrefs,
   setBattingPrefs,
-  setHideBowler,
   matchDetails,
   isCap,
   setCap,
@@ -192,7 +191,6 @@ const TypeOpeners = ({
     }
 
     setBowlingPrefs({ ...bowlingPrefs, isWicket: false });
-    setHideBowler(false);
   };
 
   const handlePlayer1 = (player) => {

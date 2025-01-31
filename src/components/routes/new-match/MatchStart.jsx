@@ -6,6 +6,8 @@ import { useAppSelector } from "@/store/hooks";
 import whichTeam from "../../../utils/functions/whichTeam.js";
 import {
   SetInning1,
+  SetTeam1Node,
+  SetTeam2Node,
   SetInning2,
   SetTeam1Score,
   SetTeam2Score,
@@ -113,6 +115,20 @@ const MatchStart = ({ matchDetails, matchPrefs, setMatchPrefs }) => {
     SetTeam2BowlersList,
   ).bowlingTeam;
 
+  const SetBattingTeamNode = whichTeam(
+    matchDetails,
+    matchPrefs.inn2Started,
+    SetTeam1Node,
+    SetTeam2Node,
+  ).battingTeam;
+
+  const SetBowlingTeamNode = whichTeam(
+    matchDetails,
+    matchPrefs.inn2Started,
+    SetTeam1Node,
+    SetTeam2Node,
+  ).bowlingTeam;
+
   useEffect(() => {
     if (matchPrefs.inn2Completed) {
       const winner = checkWinner(
@@ -138,6 +154,8 @@ const MatchStart = ({ matchDetails, matchPrefs, setMatchPrefs }) => {
         />
       ) : !matchPrefs.inn1Completed ? (
         <Batting
+          SetBattingTeamNode={SetBattingTeamNode}
+          SetBowlingTeamNode={SetBowlingTeamNode}
           SetBattingPlayers={setInning1}
           SetBowlingPlayers={setInning2}
           team1={firstTeam}
@@ -161,6 +179,8 @@ const MatchStart = ({ matchDetails, matchPrefs, setMatchPrefs }) => {
         ></Batting>
       ) : matchPrefs.inn2Started && matchPrefs.inn1Completed ? (
         <Batting
+          SetBattingTeamNode={SetBattingTeamNode}
+          SetBowlingTeamNode={SetBowlingTeamNode}
           SetBattingPlayers={setInning1}
           SetBowlingPlayers={setInning2}
           team1={secondTeam}

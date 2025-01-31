@@ -4,6 +4,7 @@ import { useState } from "react";
 import MatchVs from "./MatchVs";
 import { useAppDispatch } from "../../../store/hooks";
 import { SetMatch } from "../../../store/currentMatch";
+
 const TeamDetails = () => {
   const dispatch = useAppDispatch();
 

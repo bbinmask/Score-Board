@@ -13,24 +13,37 @@ export default class ScoringListHook {
     this.current = null;
   }
 
+  showList() {
+    return this.current.state;
+  }
+
+  prevList() {
+    return this.current.prev.state;
+  }
+
   addState(state) {
     const newNode = new Node(state);
-    console.log(this.current);
     if (!this.head) {
       this.head = newNode;
       this.tail = newNode;
       this.current = newNode;
     } else {
+      // Ensure next state is cleared if needed
+      this.current.next = null; // Important to prevent redo issues
+
+      // Link new state properly
       this.current.next = newNode;
       newNode.prev = this.current;
       this.current = newNode;
-      this.tail = newNode; // Update tail to the latest state
+      this.tail = newNode;
     }
   }
 
   undo() {
     if (this.current && this.current.prev) {
       this.current = this.current.prev;
+      console.log("New Current State:", this.current.state); // Now it logs the updated state
+      console.log("Previous State:", this.current.prev.state); // Now it logs the updated state
       return this.current.state;
     }
     return null; // No previous state
