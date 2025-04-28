@@ -3,7 +3,7 @@ const UndoButton = ({ handleUndo }) => {
     <div>
       <div className="flex gap-2">
         <button
-          className="rounded-lg border-1 bg-yellow-300 px-4 py-2 text-center text-base"
+          className="rounded-lg border-1 bg-blue-500 px-4 py-2 text-center text-base text-white"
           onClick={handleUndo}
         >
           Undo

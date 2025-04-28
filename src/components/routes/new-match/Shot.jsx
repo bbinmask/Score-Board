@@ -4,7 +4,7 @@ import React from "react";
 const Shot = ({ handleExtra, handleShot, handleStrikeChange, handleUndo }) => {
   return (
     <>
-      <div className="flex">
+      <div className="flex items-center justify-center">
         <button className="btn btn-danger m-2" onClick={handleStrikeChange}>
           change strike
         </button>

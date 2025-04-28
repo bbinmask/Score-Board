@@ -1,8 +1,6 @@
 "use client";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import axios from "axios";
 import { useState } from "react";
-import { setUserLoggedIn } from "../../../store/checkSlice";
 import { useRouter } from "next/navigation";
 import Spinner from "../../extras/Spinner";
 import Link from "next/link";
