@@ -36,7 +36,7 @@ export const POST = async (req) => {
     const body = await req.json();
     const { email, password } = body;
 
-    if (email === "") {
+    if (email === "" || password === "") {
       return NextResponse.json({
         status: 404,
         message: "ALL FIELDS ARE REQUIRED!",
@@ -58,9 +58,7 @@ export const POST = async (req) => {
       user._id,
     );
 
-    const options = {
-      secure: true,
-    };
+    const options = { secure: true };
 
     const loggedInUser = await User.findById(user._id).select(
       "-password -refreshToken",

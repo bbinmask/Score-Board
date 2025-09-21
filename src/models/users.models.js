@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: [true, "Please provide a username for this user."],
-    maxlength: [20, "Name cannot be more than 20 characters"],
+    maxlength: [30, "Name cannot be more than 30 characters"],
   },
 
   fullName: {
@@ -60,7 +60,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
-  lose: {
+  lost: {
     type: Number,
     required: true,
     default: 0,
@@ -70,16 +70,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
-  titlesWon: {
+  trophies: {
     type: Number,
     required: true,
     default: 0,
   },
-  titlesLose: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
+
   totalMatches: {
     type: Number,
     required: true,

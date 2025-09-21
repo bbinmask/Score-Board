@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "@/components/container/Sidebar";
 import StoreProvider from "@/store/StoreProvider";
-import { Suspense } from "react";
-// import Loading from "./loading";
-const inter = Inter({ subsets: ["latin"] });
+import { Urbanist, Poppins, Josefin_Sans } from "next/font/google";
+
+const urbanist = Urbanist({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  subsets: ["latin"],
+});
+
+const poppins = Poppins({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  subsets: ["latin"],
+});
+
+const josefin = Josefin_Sans({
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Score Board",
   description: "Your own matches score",
+  icons: {
+    icon: "/img/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -21,18 +36,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <title>Score Board</title>
-      <link rel="icon" type="image/x-icon" href="/img/logo.png"></link>
 
-      {/* <Suspense fallback={<Loading />}> */}
       <StoreProvider>
-        <body className={``}>
-          <nav>
-            <Sidebar />
-          </nav>
+        <body
+          className={`${urbanist.className} ${josefin.className} ${poppins.className}`}
+        >
+          <Sidebar />
           <main className="full-body">{children}</main>
         </body>
       </StoreProvider>
-      {/* </Suspense> */}
     </html>
   );
 }

@@ -33,6 +33,7 @@ ul {
 }
 body {
   scroll-behavior: smooth;
+  font-family: Poppins, Urbanist, "Josefin Sans";
   background: linear-gradient(
       transparent,
       to rgb(var(--background-crimson-low))
@@ -364,7 +365,7 @@ body {
 }
 
 .stats {
-  @apply m-0 p-0 font-[Haveltica];
+  @apply m-0 p-0 font-[urbanist];
 }
 
 .stats-li {

@@ -12,7 +12,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     await e.preventDefault();
-
     const data = { email: details.toLowerCase(), password };
     setLoader(true);
     const response = await axios
