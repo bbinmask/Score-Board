@@ -10,7 +10,7 @@ export default async () => {
       pass: process.env.DBPASSWORD,
       authSource: "admin",
     };
-    await mongoose.connect(process.env.MONGODB_URI, DB_OPTIONS);
+    await mongoose.connect(process.env.MONGODB_URI); //DB_OPTIONS
     console.warn("Connected Successfully");
   } catch (error) {
     console.error("Database connection error:", error);
